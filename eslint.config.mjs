@@ -10,6 +10,7 @@ export default tseslint.config(
       'dist',
       'node_modules',
       'coverage',
+      'test',
       'eslint.config.mjs'],
   },
   eslint.configs.recommended,
