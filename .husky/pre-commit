@@ -1,2 +1,14 @@
 #!/usr/bin/env sh
-npx lint-staged
+npx lint-staged || {
+    echo "❌ lint-staged falló o no hay archivos staged";
+    exit 1;
+}
+
+# Mostrar archivos que quedaron fuera del commit
+FILES=$(git diff --name-only --diff-filter=M)
+if [ -n "$FILES" ]; then
+    echo "⚠️  Los siguientes archivos fueron corregidos pero no se agregaron al commit:"
+    echo "$FILES"
+    echo "👉 Por favor haz: git add . && git commit -m '...' nuevamente"
+    exit 1
+fi
