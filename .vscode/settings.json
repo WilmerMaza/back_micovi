@@ -1,0 +1,16 @@
+{
+    // Usa Prettier como formateador por defecto
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    // Formatea automáticamente al guardar
+    "editor.formatOnSave": true,
+    // Aplica Prettier a archivos TypeScript
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    // ESLint valida archivos TypeScript
+    "eslint.validate": [
+        "typescript"
+    ],
+    // Solo usa Prettier si hay una configuración (como tu .prettierrc)
+    "prettier.requireConfig": true
+}

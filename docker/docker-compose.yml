@@ -1,8 +1,21 @@
-version: "3.9"
-
 services:
+  app:
+    container_name: micovi_app
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      - ../.env
+    networks:
+      - micovi_network
+    depends_on:
+      - db
+
   db:
     image: postgres:15
+    container_name: micovi_db
     restart: always
     environment:
       POSTGRES_USER: postgres
@@ -12,6 +25,12 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - micovi_network
 
 volumes:
   postgres_data:
+
+networks:
+  micovi_network:
+    driver: bridge
