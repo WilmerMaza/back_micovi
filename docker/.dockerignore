@@ -7,6 +7,7 @@ Dockerfile
 docker-compose*
 README.md
 *.log
-# Ignorar todos los archivos .env excepto el principal
+
+# Incluir todos los archivos de entorno necesarios
 !.env
-*.env.*
+!.env.*

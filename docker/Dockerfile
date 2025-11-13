@@ -3,12 +3,16 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Instalar dependencias solo del proyecto (sin dev todavía)
+# Instalar dependencias solo del proyecto
 COPY package*.json ./
 COPY tsconfig*.json ./
+
+# ⬅️ COPIAR PRISMA ANTES DE INSTALAR (por prisma generate)
+COPY prisma ./prisma
+
 RUN npm install
 
-# Copiar el código fuente y compilar
+# Copiar el resto del código fuente y compilar
 COPY . .
 RUN npm run build
 
@@ -21,8 +25,8 @@ WORKDIR /app
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma 
 
-# Puerto expuesto (ajústalo si usas otro)
 EXPOSE 3000 9229
 
 CMD ["node", "dist/main"]

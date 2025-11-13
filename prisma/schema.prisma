@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  password   String
+  role       Role
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime?
+  coach      Coach?
+  school     School?
+}
+
+model School {
+  id         String        @id @default(uuid())
+  name       String
+  address    String
+  phone      String
+  userId     String        @unique
+  user       User          @relation(fields: [userId], references: [id])
+  coaches    Coach[]
+  plans      SchoolPlan[]
+  categories Category[]
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  deletedAt  DateTime?
+}
+
+model Coach {
+  id          String           @id @default(uuid())
+  name        String
+  specialty   String
+  userId      String           @unique
+  schoolId    String
+  user        User             @relation(fields: [userId], references: [id])
+  school      School           @relation(fields: [schoolId], references: [id])
+  athletes    Athlete[]
+  categories  CoachCategory[]  // Explicit many-to-many
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  deletedAt   DateTime?
+}
+
+model Athlete {
+  id         String     @id @default(uuid())
+  name       String
+  age        Int
+  coachId    String
+  coach      Coach      @relation(fields: [coachId], references: [id])
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  deletedAt  DateTime?
+}
+
+model Plan {
+  id          String        @id @default(uuid())
+  name        String
+  description String
+  price       Float
+  schools     SchoolPlan[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
+}
+
+model SchoolPlan {
+  id         String     @id @default(uuid())
+  schoolId   String
+  planId     String
+  startDate  DateTime
+  endDate    DateTime
+  school     School     @relation(fields: [schoolId], references: [id])
+  plan       Plan       @relation(fields: [planId], references: [id])
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  deletedAt  DateTime?
+}
+
+model Category {
+  id         String           @id @default(uuid())
+  name       String
+  schoolId   String
+  school     School           @relation(fields: [schoolId], references: [id])
+  coaches    CoachCategory[]  // Explicit many-to-many
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  deletedAt  DateTime?
+}
+
+model CoachCategory {
+  id          String    @id @default(uuid())
+  coachId     String
+  categoryId  String
+  assignedAt  DateTime  @default(now())
+
+  coach       Coach     @relation(fields: [coachId], references: [id])
+  category    Category  @relation(fields: [categoryId], references: [id])
+
+  @@unique([coachId, categoryId])
+  @@index([coachId])
+  @@index([categoryId])
+}
+
+enum Role {
+  ADMIN
+  SCHOOL
+  COACH
+  ATHLETE
+}
