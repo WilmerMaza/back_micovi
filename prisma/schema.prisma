@@ -8,101 +8,113 @@ datasource db {
 }
 
 model User {
-  id         String   @id @default(uuid())
-  email      String   @unique
-  password   String
-  role       Role
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  deletedAt  DateTime?
-  coach      Coach?
-  school     School?
+  id        String    @id @default(uuid())
+  email     String    @unique
+  password  String
+  role      Role
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  country   String?
+  state     String?
+  city      String?
+  phone     String?
+  address   String?
+  coach     Coach?
+  school    School?
 }
 
 model School {
-  id         String        @id @default(uuid())
-  name       String
-  address    String
-  phone      String
-  userId     String        @unique
-  user       User          @relation(fields: [userId], references: [id])
-  coaches    Coach[]
-  plans      SchoolPlan[]
-  categories Category[]
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
-  deletedAt  DateTime?
+  id                 String       @id @default(uuid())
+  name               String
+  userId             String       @unique
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  deletedAt          DateTime?
+  character          Character
+  headquarters       String?
+  website            String?
+  representativename String?
+  categories         Category[]
+  coaches            Coach[]
+  user               User         @relation(fields: [userId], references: [id])
+  plans              SchoolPlan[]
 }
 
 model Coach {
-  id          String           @id @default(uuid())
-  name        String
-  specialty   String
-  userId      String           @unique
-  schoolId    String
-  user        User             @relation(fields: [userId], references: [id])
-  school      School           @relation(fields: [schoolId], references: [id])
-  athletes    Athlete[]
-  categories  CoachCategory[]  // Explicit many-to-many
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  deletedAt   DateTime?
+  id         String          @id @default(uuid())
+  name       String
+  specialty  String
+  userId     String          @unique
+  schoolId   String
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  deletedAt  DateTime?
+  athletes   Athlete[]
+  school     School          @relation(fields: [schoolId], references: [id])
+  user       User            @relation(fields: [userId], references: [id])
+  categories CoachCategory[]
 }
 
 model Athlete {
-  id         String     @id @default(uuid())
-  name       String
-  age        Int
-  coachId    String
-  coach      Coach      @relation(fields: [coachId], references: [id])
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-  deletedAt  DateTime?
+  id        String    @id @default(uuid())
+  name      String
+  age       Int
+  coachId   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  coach     Coach     @relation(fields: [coachId], references: [id])
 }
 
 model Plan {
-  id          String        @id @default(uuid())
-  name        String
-  description String
-  price       Float
-  schools     SchoolPlan[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  deletedAt   DateTime?
+  id                 String       @id @default(uuid())
+  createdAt          DateTime     @default(now())
+  deletedAt          DateTime?
+  description        String
+  name               String       @unique
+  price              Float
+  billingPeriodMonths Int         @default(1)
+  maxCoaches         Int?
+  maxAthletes        Int?
+  isActive           Boolean      @default(true)
+  updatedAt          DateTime     @updatedAt
+  schools            SchoolPlan[]
 }
 
 model SchoolPlan {
-  id         String     @id @default(uuid())
-  schoolId   String
-  planId     String
-  startDate  DateTime
-  endDate    DateTime
-  school     School     @relation(fields: [schoolId], references: [id])
-  plan       Plan       @relation(fields: [planId], references: [id])
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-  deletedAt  DateTime?
+  id        String    @id @default(uuid())
+  schoolId  String
+  planId    String
+  startDate DateTime
+  endDate   DateTime
+  createdAt DateTime  @default(now())
+  updatedAt DateTime            @updatedAt
+  deletedAt DateTime?
+  status    SubscriptionStatus  @default(ACTIVE)
+  canceledAt DateTime?
+  plan      Plan                @relation(fields: [planId], references: [id])
+  school    School              @relation(fields: [schoolId], references: [id])
 }
 
 model Category {
-  id         String           @id @default(uuid())
-  name       String
-  schoolId   String
-  school     School           @relation(fields: [schoolId], references: [id])
-  coaches    CoachCategory[]  // Explicit many-to-many
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
-  deletedAt  DateTime?
+  id        String          @id @default(uuid())
+  name      String
+  schoolId  String
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  deletedAt DateTime?
+  school    School          @relation(fields: [schoolId], references: [id])
+  coaches   CoachCategory[]
 }
 
 model CoachCategory {
-  id          String    @id @default(uuid())
-  coachId     String
-  categoryId  String
-  assignedAt  DateTime  @default(now())
-
-  coach       Coach     @relation(fields: [coachId], references: [id])
-  category    Category  @relation(fields: [categoryId], references: [id])
+  id         String   @id @default(uuid())
+  coachId    String
+  categoryId String
+  assignedAt DateTime @default(now())
+  category   Category @relation(fields: [categoryId], references: [id])
+  coach      Coach    @relation(fields: [coachId], references: [id])
 
   @@unique([coachId, categoryId])
   @@index([coachId])
@@ -114,4 +126,16 @@ enum Role {
   SCHOOL
   COACH
   ATHLETE
+}
+
+enum Character {
+  PUBLIC
+  PRIVATE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  SCHEDULED
+  CANCELED
+  EXPIRED
 }

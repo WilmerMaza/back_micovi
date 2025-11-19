@@ -9,12 +9,19 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: WinstonModule.createLogger({
       transports: [new transports.Console()],
-      format: format.json(),
+      format: format.combine(format.timestamp(), format.json()),
     }),
   });
+  // Habilitar CORS globalmente
   app.enableCors();
+
+  // Pipes globales para validaciones y transformación
   app.useGlobalPipes(
-    new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
   );
 
   // Swagger setup
@@ -26,7 +33,7 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document); // URL: http://localhost:3000/api
+  SwaggerModule.setup('document', app, document); // URL: http://localhost:3000/document
   await app.listen(process.env.PORT || 3000);
 }
 void bootstrap();

@@ -9,4 +9,11 @@ export class AuthenticatedUserDto {
 
   @ApiProperty({ enum: ['ADMIN', 'SCHOOL', 'COACH'] })
   role: UserRole;
+
+  @ApiProperty({
+    required: false,
+    nullable: true,
+    description: 'Identifier of the school when role is SCHOOL',
+  })
+  schoolId?: string | null;
 }

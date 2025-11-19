@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config'; // <-- IMPORTANTE
 import { AuthModule } from './infrastructure/auth/auth.module';
+import { BillingModule } from './infrastructure/billing/billing.module';
 import { validate } from './infrastructure/config/env.validation';
 import { SchoolModule } from './infrastructure/school/school.module';
 
@@ -13,6 +14,7 @@ import { SchoolModule } from './infrastructure/school/school.module';
     }),
     AuthModule,
     SchoolModule,
+    BillingModule,
   ],
   controllers: [],
   providers: [],

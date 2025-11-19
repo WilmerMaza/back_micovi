@@ -21,7 +21,7 @@
     "prepare": "husky",
     "start:nodemon": "nodemon",
     "postinstall": "prisma generate",
-    "sync:from-db": "npm run db:pull && npm run db:migration:generate && npm run db:migration:resolve",
+    "sync:from-db": "npx prisma db pull && npx prisma generate",
     "db:pull": "prisma db pull",
     "db:migration:generate": "prisma migrate dev --name sync-from-db --create-only",
     "db:migration:resolve": "ts-node prisma/scripts/resolve-latest.ts"
@@ -37,6 +37,7 @@
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
     "@nestjs/cqrs": "^11.0.3",
+    "@nestjs/jwt": "^11.0.1",
     "@nestjs/passport": "^11.0.2",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/swagger": "^11.2.1",
@@ -47,6 +48,7 @@
     "nest-winston": "^1.10.2",
     "nodemon": "^3.1.10",
     "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
     "pg": "^8.16.3",
     "prom-client": "^15.1.3",
@@ -66,6 +68,7 @@
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.19.0",
+    "@types/passport-jwt": "^4.0.1",
     "@types/passport-local": "^1.0.38",
     "@types/supertest": "^6.0.2",
     "dotenv-cli": "^11.0.0",
@@ -104,6 +107,9 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^src/(.*)$": "<rootDir>/../src/$1"
+    }
   }
 }

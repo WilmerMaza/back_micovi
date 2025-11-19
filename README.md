@@ -1,98 +1,66 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Back Micovi API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API para la gestión de instituciones deportivas construida con NestJS 11, Prisma y PostgreSQL. El proyecto adopta arquitectura hexagonal con CQRS para desacoplar el dominio del framework y permitir agregar nuevos flujos (commands/queries) sin romper capas existentes.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Stack
+- NestJS 11 + `@nestjs/cqrs`
+- Prisma ORM + PostgreSQL
+- Passport (estrategia local) + validaciones con `class-validator`
+- Winston para logging y Zod para validación de variables de entorno
 
-## Description
+## Arquitectura
+| Capa | Responsabilidad | Código |
+| --- | --- | --- |
+| **Domain** | Entidades, value objects, puertos (repositorios/servicios) y excepciones ricas en reglas de negocio. | `src/domain/*` |
+| **Application** | Casos de uso via commands/queries y handlers CQRS. No dependen de Nest ni de Prisma. | `src/application/*` |
+| **Infrastructure** | Adaptadores secundarios: Prisma, módulos Nest, Guards/Strategies, wiring de dependencias y servicios técnicos. | `src/infrastructure/*` |
+| **Interfaces** | Adaptadores primarios expuestos al exterior (REST controllers, DTOs). Solo orquestan CommandBus/QueryBus. | `src/interfaces/rest/*` |
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Flujos actuales:
+- **Auth/Login**: `AuthController` → `LocalAuthGuard` → `LoginCommand` → `LoginHandler` → `UserRepository` (Prisma) + `PasswordHasher`.
+- **School/Register**: `SchoolController` → `RegisterSchoolCommand` → `RegisterSchoolHandler` → `UserRepository` + `SchoolRepository`. Excepciones de dominio se traducen a HTTP 409/401 en la capa de interfaz.
 
-## Project setup
+Para más contexto ver [`docs/architecture.md`](docs/architecture.md) y la guía paso a paso para nuevos endpoints en [`docs/api-development.md`](docs/api-development.md).
 
-```bash
-$ npm install
+## Estructura principal
+```text
+src
+├── application        # Commands/queries + handlers + DTOs de casos de uso
+├── domain             # Entidades, puertos y excepciones
+├── infrastructure     # Prisma, módulos Nest, seguridad, persistence
+├── interfaces         # Adaptadores REST (controllers + DTOs)
+└── main.ts            # Bootstrap Nest (pipes, logger, filters, etc.)
 ```
 
-## Compile and run the project
+## Comenzar
+1. Copia variables de entorno y actualiza la URL de base de datos:
+   ```bash
+   cp .env.example .env
+   ```
+2. Instala dependencias y genera Prisma Client
+   ```bash
+   npm install
+   ```
+3. Ejecuta migraciones (requiere PostgreSQL accesible):
+   ```bash
+   npx prisma migrate dev
+   ```
+4. Levanta la API
+   ```bash
+   npm run start:dev
+   ```
 
-```bash
-# development
-$ npm run start
+## Scripts clave
+| Comando | Descripción |
+| --- | --- |
+| `npm run start:dev` | Levanta Nest con watch mode. |
+| `npm run build` | Compila a `dist/`. Útil para CI. |
+| `npm run test` / `test:e2e` | Ejecuta unit tests o e2e. |
+| `npm run lint` | ESLint + Prettier sobre `src` y `test`. |
+| `npx prisma studio` | Explora la base de datos. |
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
-```
-
-## Run tests
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## Prácticas recomendadas
+- Toda nueva funcionalidad debe partir del dominio (entidades/puertos) y exponer el caso de uso mediante commands/queries.
+- Mantén las excepciones de dominio en `src/domain/**/exceptions` y tradúcelas a HTTP en la interfaz (controllers/guards/filters).
+- Reutiliza módulos de infraestructura comunes (`PersistenceModule`, `SecurityModule`) y evita importar `PrismaService` o clases Nest en la capa de aplicación.
+- Documenta cada flujo nuevo en `docs/` siguiendo la guía de APIs para conservar la trazabilidad técnica.
