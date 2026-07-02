@@ -22,6 +22,25 @@ model User {
   address   String?
   coach     Coach?
   school    School?
+  authSessions AuthSession[]
+}
+
+model AuthSession {
+  id               String    @id @default(uuid())
+  userId           String
+  familyId         String
+  refreshTokenHash String    @unique
+  userAgent        String?
+  ipAddress        String?
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([familyId])
+  @@index([userId, revokedAt])
 }
 
 model School {

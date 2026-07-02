@@ -35,14 +35,17 @@ El proyecto sigue una arquitectura hexagonal impulsada por CQRS. Cada capa tiene
 ## Flujos actuales
 
 ### Login
-1. `POST /auth/login` recibe `LoginDto`.
+1. `POST /api/auth/login` recibe `LoginDto`.
 2. `LocalAuthGuard` dispara la estrategia local (`LocalStrategy`).
 3. `LocalStrategy` ejecuta `LoginCommand` mediante el `CommandBus`.
 4. `LoginHandler` busca al usuario (`UserRepository`) y valida la contraseña con `PasswordHasher`.
-5. El handler retorna `AuthenticatedUserDto`; la estrategia lo adjunta a `req.user` y el controlador responde.
+5. `SessionAuthService` crea una sesión en BD y `CookieAuthService` emite cookies HttpOnly (`micovi_access`, `micovi_refresh`, `micovi_csrf`).
+6. El controlador responde con el perfil del usuario (sin tokens en el body).
+
+Ver [`docs/auth-httpOnly-cookies.md`](auth-httpOnly-cookies.md) para el flujo completo (refresh, logout, CSRF, ambientes).
 
 ### Registro de instituciones (School)
-1. `POST /schools` recibe `RegisterSchoolDto`.
+1. `POST /api/schools/register` recibe `RegisterSchoolDto`.
 2. El controller envía `RegisterSchoolCommand` al `CommandBus`.
 3. `RegisterSchoolHandler` verifica unicidad del email (`UserRepository`), hashea la contraseña (`PasswordHasher`) y crea tanto el `User` como la `School` con ayuda de los repositorios Prisma.
 4. Si el correo ya existe se lanza `EmailAlreadyInUseException`, traducida en la interfaz a HTTP 409.

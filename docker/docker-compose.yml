@@ -8,6 +8,9 @@ services:
       - "3000:3000"
     env_file:
       - ../.env
+    environment:
+      # Dentro de Docker la BD se alcanza por nombre de servicio, no localhost
+      DATABASE_URL: postgres://postgres:postgres@db:5432/micovi_db
     networks:
       - micovi_network
     depends_on:
