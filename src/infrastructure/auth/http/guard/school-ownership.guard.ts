@@ -1,5 +1,5 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { Request } from 'express';
+import type { Request } from 'express';
 import { AuthenticatedUserDto } from 'src/application/auth/dto/authenticated-user.dto';
 import { UserRole } from 'src/domain/auth/entities/user-role.enum';
 

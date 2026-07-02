@@ -20,7 +20,7 @@ Flujos actuales:
 - **Auth/Login**: `AuthController` → `LocalAuthGuard` → `LoginCommand` → `LoginHandler` → `UserRepository` (Prisma) + `PasswordHasher`.
 - **School/Register**: `SchoolController` → `RegisterSchoolCommand` → `RegisterSchoolHandler` → `UserRepository` + `SchoolRepository`. Excepciones de dominio se traducen a HTTP 409/401 en la capa de interfaz.
 
-Para más contexto ver [`docs/architecture.md`](docs/architecture.md) y la guía paso a paso para nuevos endpoints en [`docs/api-development.md`](docs/api-development.md).
+Para más contexto ver [`docs/architecture.md`](docs/architecture.md), el modelo de base de datos en [`docs/database.md`](docs/database.md), la guía de autenticación con cookies HttpOnly en [`docs/auth-httpOnly-cookies.md`](docs/auth-httpOnly-cookies.md), las convenciones de documentación en código en [`docs/code-documentation.md`](docs/code-documentation.md) y la guía paso a paso para nuevos endpoints en [`docs/api-development.md`](docs/api-development.md).
 
 ## Estructura principal
 ```text
