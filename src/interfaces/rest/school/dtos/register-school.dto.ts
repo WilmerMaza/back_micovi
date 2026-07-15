@@ -1,6 +1,41 @@
+import { Type } from 'class-transformer';
+import {
+  ArrayNotEmpty,
+  IsArray,
+  IsDateString,
+  IsEmail,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUrl,
+  IsUUID,
+  Min,
+  MinLength,
+  ValidateNested,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsEnum, IsString, MinLength } from 'class-validator';
 import { schoolCharacter } from 'src/domain/school/entities/school-chacharacter.enum';
+import { InstitutionType } from 'src/domain/school/entities/institution-type.enum';
+
+export class CategoryDescriptorDto {
+  @ApiProperty({ example: 'Infantil', description: 'Category name' })
+  @IsString()
+  @MinLength(2)
+  name: string;
+
+  @ApiProperty({ example: 6, description: 'Minimum age', required: false })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  minAge?: number;
+
+  @ApiProperty({ example: 12, description: 'Maximum age', required: false })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  maxAge?: number;
+}
 
 export class RegisterSchoolDto {
   @ApiProperty({
@@ -60,6 +95,22 @@ export class RegisterSchoolDto {
   character: schoolCharacter;
 
   @ApiProperty({
+    example: InstitutionType.ACADEMY,
+    enum: InstitutionType,
+    description: 'Type of sports institution',
+  })
+  @IsEnum(InstitutionType)
+  institutionType: InstitutionType;
+
+  @ApiProperty({
+    example: '901123456-7',
+    description: 'Tax ID (NIT/RUC) of the institution',
+  })
+  @IsString()
+  @MinLength(5)
+  taxId: string;
+
+  @ApiProperty({
     example: 'Sede Principal',
     description: 'Headquarters of the school',
   })
@@ -70,10 +121,11 @@ export class RegisterSchoolDto {
   @ApiProperty({
     example: 'https://www.escueladeportivaaguilas.com',
     description: 'Official website of the school',
+    required: false,
   })
-  @IsString()
-  @MinLength(5)
-  website: string;
+  @IsOptional()
+  @IsUrl()
+  website?: string;
 
   @ApiProperty({
     example: 'Juan Pérez',
@@ -97,4 +149,59 @@ export class RegisterSchoolDto {
   @IsString()
   @MinLength(8)
   password: string;
+
+  @ApiProperty({
+    example: 'https://logo.example.com/logo.png',
+    description: 'URL of the institution logo',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  logo?: string;
+
+  @ApiProperty({
+    example: '2024-01-15',
+    description: 'Foundation date of the institution (ISO 8601)',
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  foundationDate?: string;
+
+  @ApiProperty({
+    example: 10.4806,
+    description: 'Latitude coordinate',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  latitude?: number;
+
+  @ApiProperty({
+    example: -66.9036,
+    description: 'Longitude coordinate',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  longitude?: number;
+
+  @ApiProperty({
+    example: ['uuid-discipline-1', 'uuid-discipline-2'],
+    description: 'IDs of existing sport disciplines to associate',
+  })
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsUUID('all', { each: true })
+  disciplineIds: string[];
+
+  @ApiProperty({
+    type: [CategoryDescriptorDto],
+    description: 'Age categories to create for the institution',
+  })
+  @IsArray()
+  @ArrayNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => CategoryDescriptorDto)
+  categories: CategoryDescriptorDto[];
 }

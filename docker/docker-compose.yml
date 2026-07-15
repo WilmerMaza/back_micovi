@@ -8,6 +8,8 @@ services:
       - "3000:3000"
     env_file:
       - ../.env
+    environment:
+      - DATABASE_URL=postgres://postgres:post123@db:5432/micovi_db
     networks:
       - micovi_network
     depends_on:
@@ -19,10 +21,10 @@ services:
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: post123
       POSTGRES_DB: micovi_db
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:

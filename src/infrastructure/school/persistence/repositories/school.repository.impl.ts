@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Prisma, PrismaClient, School as PrismaSchool } from '@prisma/client';
 import { schoolCharacter } from 'src/domain/school/entities/school-chacharacter.enum';
+import { InstitutionType } from 'src/domain/school/entities/institution-type.enum';
 import { School } from 'src/domain/school/entities/school.entity';
 import { SchoolRepository } from 'src/domain/school/repositories/school.repository';
 import { PrismaService } from 'src/infrastructure/persistence/prisma.service';
@@ -18,9 +19,20 @@ export class PrismaSchoolRepository implements SchoolRepository {
         name: school.name,
         userId: school.userId,
         character: school.character,
+        institutionType: school.institutionType,
+        taxId: school.taxId,
+        phone: school.phone,
+        address: school.address,
+        country: school.country,
+        state: school.state,
+        city: school.city,
         headquarters: school.headquarters,
         website: school.website,
         representativename: school.representativename,
+        logo: school.logo,
+        foundationDate: school.foundationDate,
+        latitude: school.latitude,
+        longitude: school.longitude,
       },
     });
     return this.toDomain(created);
@@ -40,15 +52,40 @@ export class PrismaSchoolRepository implements SchoolRepository {
     return record ? this.toDomain(record) : null;
   }
 
+  async findByTaxId(taxId: string): Promise<School | null> {
+    const record = await this.prisma.school.findFirst({
+      where: { taxId, deletedAt: null },
+    });
+    return record ? this.toDomain(record) : null;
+  }
+
+  async findByName(name: string): Promise<School | null> {
+    const record = await this.prisma.school.findFirst({
+      where: { name, deletedAt: null },
+    });
+    return record ? this.toDomain(record) : null;
+  }
+
   private toDomain(record: PrismaSchool): School {
     return new School(
       record.id,
       record.name,
       record.userId,
       record.character as schoolCharacter,
+      record.institutionType as InstitutionType,
+      record.taxId,
+      record.phone,
+      record.address,
+      record.country,
+      record.state,
+      record.city,
       record.headquarters,
       record.website,
       record.representativename,
+      record.logo,
+      record.foundationDate,
+      record.latitude,
+      record.longitude,
     );
   }
 }

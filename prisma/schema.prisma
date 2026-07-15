@@ -25,19 +25,31 @@ model User {
 }
 
 model School {
-  id                 String       @id @default(uuid())
+  id                 String             @id @default(uuid())
   name               String
-  userId             String       @unique
-  createdAt          DateTime     @default(now())
-  updatedAt          DateTime     @updatedAt
+  userId             String             @unique
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
   deletedAt          DateTime?
   character          Character
+  institutionType    InstitutionType
+  taxId              String             @unique
+  phone              String
+  address            String
+  country            String
+  state              String
+  city               String
   headquarters       String?
   website            String?
   representativename String?
+  logo               String?
+  foundationDate     DateTime?
+  latitude           Float?
+  longitude          Float?
   categories         Category[]
   coaches            Coach[]
-  user               User         @relation(fields: [userId], references: [id])
+  disciplines        SchoolDiscipline[]
+  user               User               @relation(fields: [userId], references: [id])
   plans              SchoolPlan[]
 }
 
@@ -68,39 +80,64 @@ model Athlete {
 }
 
 model Plan {
-  id                 String       @id @default(uuid())
-  createdAt          DateTime     @default(now())
-  deletedAt          DateTime?
-  description        String
-  name               String       @unique
-  price              Float
-  billingPeriodMonths Int         @default(1)
-  maxCoaches         Int?
-  maxAthletes        Int?
-  isActive           Boolean      @default(true)
-  updatedAt          DateTime     @updatedAt
-  schools            SchoolPlan[]
+  id                  String       @id @default(uuid())
+  createdAt           DateTime     @default(now())
+  deletedAt           DateTime?
+  description         String
+  name                String       @unique
+  price               Float
+  billingPeriodMonths Int          @default(1)
+  maxCoaches          Int?
+  maxAthletes         Int?
+  isActive            Boolean      @default(true)
+  updatedAt           DateTime     @updatedAt
+  schools             SchoolPlan[]
 }
 
 model SchoolPlan {
-  id        String    @id @default(uuid())
-  schoolId  String
-  planId    String
-  startDate DateTime
-  endDate   DateTime
-  createdAt DateTime  @default(now())
-  updatedAt DateTime            @updatedAt
-  deletedAt DateTime?
-  status    SubscriptionStatus  @default(ACTIVE)
+  id         String             @id @default(uuid())
+  schoolId   String
+  planId     String
+  startDate  DateTime
+  endDate    DateTime
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+  deletedAt  DateTime?
+  status     SubscriptionStatus @default(ACTIVE)
   canceledAt DateTime?
-  plan      Plan                @relation(fields: [planId], references: [id])
-  school    School              @relation(fields: [schoolId], references: [id])
+  plan       Plan               @relation(fields: [planId], references: [id])
+  school     School             @relation(fields: [schoolId], references: [id])
+}
+
+model SportDiscipline {
+  id          String             @id @default(uuid())
+  name        String             @unique
+  description String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  deletedAt   DateTime?
+  schools     SchoolDiscipline[]
+}
+
+model SchoolDiscipline {
+  id           String          @id @default(uuid())
+  schoolId     String
+  disciplineId String
+  assignedAt   DateTime        @default(now())
+  school       School          @relation(fields: [schoolId], references: [id])
+  discipline   SportDiscipline @relation(fields: [disciplineId], references: [id])
+
+  @@unique([schoolId, disciplineId])
+  @@index([schoolId])
+  @@index([disciplineId])
 }
 
 model Category {
   id        String          @id @default(uuid())
   name      String
   schoolId  String
+  minAge    Int?
+  maxAge    Int?
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
   deletedAt DateTime?
@@ -131,6 +168,15 @@ enum Role {
 enum Character {
   PUBLIC
   PRIVATE
+}
+
+enum InstitutionType {
+  CLUB
+  ACADEMY
+  FEDERATION
+  ASSOCIATION
+  SCHOOL
+  OTHER
 }
 
 enum SubscriptionStatus {
