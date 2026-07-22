@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { AthleteModule } from './infrastructure/athlete/athlete.module';
 import { AuthModule } from './infrastructure/auth/auth.module';
 import { BillingModule } from './infrastructure/billing/billing.module';
 import { validate } from './infrastructure/config/env.validation';
@@ -20,6 +21,7 @@ import { SchoolModule } from './infrastructure/school/school.module';
         limit: 120,
       },
     ]),
+    AthleteModule,
     AuthModule,
     SchoolModule,
     BillingModule,

@@ -1,0 +1,30 @@
+import { AthleteDto } from '../dto/athlete.dto';
+import { Athlete } from 'src/domain/athlete/entities/athlete.entity';
+
+export const mapAthleteToDto = (athlete: Athlete): AthleteDto => ({
+  id: athlete.id,
+  documentTypeId: athlete.documentTypeId ?? '',
+  documentNumber: athlete.documentNumber ?? '',
+  firstName: athlete.firstName,
+  lastName: athlete.lastName,
+  birthDate: athlete.birthDate ?? '',
+  age: athlete.age,
+  genderId: athlete.genderId ?? '',
+  birthCountryId: athlete.birthCountryId ?? '',
+  birthDepartmentId: athlete.birthDepartmentId ?? '',
+  birthCityId: athlete.birthCityId ?? '',
+  residenceCountryId: athlete.residenceCountryId ?? '',
+  residenceDepartmentId: athlete.residenceDepartmentId ?? '',
+  residenceCityId: athlete.residenceCityId ?? '',
+  educationLevelId: athlete.educationLevelId ?? '',
+  educationInstitution: athlete.educationInstitution ?? '',
+  categoryId: athlete.categoryId ?? '',
+  weight: athlete.weight ?? 0,
+  height: athlete.height ?? 0,
+  schoolId: athlete.schoolId ?? '',
+  disciplineId: athlete.disciplineId ?? '',
+  email: athlete.email ?? '',
+  phone: athlete.phone ?? '',
+  createdAt: athlete.createdAt,
+  updatedAt: athlete.updatedAt,
+});
