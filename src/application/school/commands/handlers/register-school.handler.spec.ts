@@ -67,6 +67,10 @@ describe('RegisterSchoolHandler', () => {
     const unitOfWork = createUnitOfWorkMock(() => ({
       userRepository: transactionalUserRepository as any,
       schoolRepository: schoolRepository as any,
+      planRepository: undefined as any,
+      subscriptionRepository: undefined as any,
+      coachRepository: undefined as any,
+      athleteRepository: undefined as any,
     }));
 
     const handler = new RegisterSchoolHandler(
@@ -105,6 +109,10 @@ describe('RegisterSchoolHandler', () => {
     const unitOfWork = createUnitOfWorkMock(() => ({
       userRepository: transactionalUserRepository as any,
       schoolRepository: schoolRepository as any,
+      planRepository: undefined as any,
+      subscriptionRepository: undefined as any,
+      coachRepository: undefined as any,
+      athleteRepository: undefined as any,
     }));
 
     const handler = new RegisterSchoolHandler(

@@ -198,6 +198,10 @@ class InMemoryUnitOfWork implements UnitOfWork {
       return await work({
         userRepository: this.userRepository,
         schoolRepository: this.schoolRepository,
+        planRepository: undefined as any,
+        subscriptionRepository: undefined as any,
+        coachRepository: undefined as any,
+        athleteRepository: undefined as any,
       });
     } catch (error) {
       this.userRepository.restore(userSnapshot);

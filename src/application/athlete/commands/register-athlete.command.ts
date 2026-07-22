@@ -1,0 +1,25 @@
+export class RegisterAthleteCommand {
+  constructor(
+    public readonly documentTypeId: string,
+    public readonly documentNumber: string,
+    public readonly firstName: string,
+    public readonly lastName: string,
+    public readonly birthDate: string,
+    public readonly genderId: string,
+    public readonly birthCountryId: string,
+    public readonly birthDepartmentId: string,
+    public readonly birthCityId: string,
+    public readonly residenceCountryId: string,
+    public readonly residenceDepartmentId: string,
+    public readonly residenceCityId: string,
+    public readonly educationLevelId: string,
+    public readonly educationInstitution: string,
+    public readonly categoryId: string,
+    public readonly weight: number,
+    public readonly height: number,
+    public readonly schoolId: string,
+    public readonly disciplineId: string,
+    public readonly email: string,
+    public readonly phone: string,
+  ) {}
+}
