@@ -1,7 +1,13 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import cookieParser from 'cookie-parser';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
+import { AuthSession } from '../src/domain/auth/entities/auth-session.entity';
+import {
+  AuthSessionRepository,
+  CreateAuthSessionInput,
+} from '../src/domain/auth/repositories/auth-session.repository';
 import { UserRepository } from '../src/domain/auth/repositories/user.repository';
 import { PasswordHasher } from '../src/domain/auth/services/password-hasher.service';
 import { CategoryRepository } from '../src/domain/school/repositories/category.repository';
@@ -23,13 +29,19 @@ import { PrismaService } from '../src/infrastructure/persistence/prisma.service'
 
 class InMemoryUserRepository implements UserRepository {
   private usersByEmail = new Map<string, User>();
+  private usersById = new Map<string, User>();
 
   async findByEmail(email: string): Promise<User | null> {
     return this.usersByEmail.get(email) ?? null;
   }
 
+  async findById(id: string): Promise<User | null> {
+    return this.usersById.get(id) ?? null;
+  }
+
   async create(user: User): Promise<User> {
     this.usersByEmail.set(user.email, user);
+    this.usersById.set(user.id, user);
     return user;
   }
 
@@ -39,6 +51,7 @@ class InMemoryUserRepository implements UserRepository {
 
   restore(snapshot: Map<string, User>): void {
     this.usersByEmail = new Map(snapshot);
+    this.usersById = new Map([...snapshot.values()].map((u) => [u.id, u]));
   }
 
   count(): number {
@@ -48,7 +61,7 @@ class InMemoryUserRepository implements UserRepository {
 
 class InMemorySchoolRepository implements SchoolRepository {
   private schools = new Map<string, School>();
-  private taxIndex = new Map<string, string>(); // taxId → schoolId
+  private taxIndex = new Map<string, string>();
 
   async create(school: School): Promise<School> {
     this.schools.set(school.id, school);
@@ -119,7 +132,7 @@ class InMemoryCategoryRepository implements CategoryRepository {
 
 class InMemorySportDisciplineRepository implements SportDisciplineRepository {
   private disciplines = new Map<string, SportDiscipline>();
-  private schoolLinks = new Map<string, Set<string>>(); // schoolId → Set<disciplineId>
+  private schoolLinks = new Map<string, Set<string>>();
 
   async findById(id: string): Promise<SportDiscipline | null> {
     return this.disciplines.get(id) ?? null;
@@ -158,6 +171,103 @@ class InMemorySportDisciplineRepository implements SportDisciplineRepository {
 
   getLinkedDisciplineIds(schoolId: string): string[] {
     return Array.from(this.schoolLinks.get(schoolId) ?? []);
+  }
+}
+
+class InMemoryAuthSessionRepository implements AuthSessionRepository {
+  private sessions = new Map<string, AuthSession>();
+
+  async create(input: CreateAuthSessionInput): Promise<AuthSession> {
+    const now = new Date();
+    const session = new AuthSession(
+      input.id,
+      input.userId,
+      input.familyId,
+      input.refreshTokenHash,
+      input.userAgent ?? null,
+      input.ipAddress ?? null,
+      input.expiresAt,
+      null,
+      now,
+      now,
+    );
+    this.sessions.set(session.id, session);
+    return session;
+  }
+
+  async findByRefreshTokenHash(hash: string): Promise<AuthSession | null> {
+    for (const session of this.sessions.values()) {
+      if (session.refreshTokenHash === hash) {
+        return session;
+      }
+    }
+    return null;
+  }
+
+  async findActiveById(id: string): Promise<AuthSession | null> {
+    const session = this.sessions.get(id);
+    return session?.isActive ? session : null;
+  }
+
+  async revokeById(id: string): Promise<void> {
+    const session = this.sessions.get(id);
+    if (!session) return;
+    this.sessions.set(
+      id,
+      new AuthSession(
+        session.id,
+        session.userId,
+        session.familyId,
+        session.refreshTokenHash,
+        session.userAgent,
+        session.ipAddress,
+        session.expiresAt,
+        new Date(),
+        session.createdAt,
+        new Date(),
+      ),
+    );
+  }
+
+  async revokeFamily(familyId: string): Promise<void> {
+    for (const [id, session] of this.sessions) {
+      if (session.familyId === familyId) {
+        await this.revokeById(id);
+      }
+    }
+  }
+
+  async revokeAllByUserId(userId: string): Promise<void> {
+    for (const [id, session] of this.sessions) {
+      if (session.userId === userId) {
+        await this.revokeById(id);
+      }
+    }
+  }
+
+  async rotateRefreshToken(
+    sessionId: string,
+    newRefreshTokenHash: string,
+    newExpiresAt: Date,
+  ): Promise<AuthSession> {
+    const session = this.sessions.get(sessionId);
+    if (!session) {
+      throw new Error('Session not found');
+    }
+    const rotated = new AuthSession(
+      session.id,
+      session.userId,
+      session.familyId,
+      newRefreshTokenHash,
+      session.userAgent,
+      session.ipAddress,
+      newExpiresAt,
+      null,
+      session.createdAt,
+      new Date(),
+    );
+    this.sessions.set(sessionId, rotated);
+    return rotated;
   }
 }
 
@@ -221,7 +331,6 @@ class InMemoryPasswordHasher implements PasswordHasher {
 // ---------------------------------------------------------------------------
 
 const disciplineId = '11111111-1111-4111-8111-111111111111';
-const categoryId = '22222222-2222-4222-8222-222222222222';
 
 const validPayload = {
   name: 'Mi Academia Deportiva',
@@ -265,6 +374,7 @@ describe('Auth & School flows (e2e)', () => {
       sportDisciplineRepository,
     );
     const passwordHasher = new InMemoryPasswordHasher();
+    const authSessionRepository = new InMemoryAuthSessionRepository();
 
     const mockPrismaService = {
       $connect: jest.fn(),
@@ -283,6 +393,8 @@ describe('Auth & School flows (e2e)', () => {
       .useValue(categoryRepository)
       .overrideProvider(SportDisciplineRepository)
       .useValue(sportDisciplineRepository)
+      .overrideProvider(AuthSessionRepository)
+      .useValue(authSessionRepository)
       .overrideProvider(UnitOfWork)
       .useValue(unitOfWork)
       .overrideProvider(PasswordHasher)
@@ -419,12 +531,11 @@ describe('Auth & School flows (e2e)', () => {
         .expect(201);
 
       expect(loginResponse.body).toMatchObject({
-        user: {
-          email: validPayload.email,
-          role: UserRole.SCHOOL,
-        },
-        accessToken: expect.any(String),
+        email: validPayload.email,
+        role: UserRole.SCHOOL,
       });
+      expect(loginResponse.body.id).toBeDefined();
+      expect(loginResponse.body.schoolId).toBeDefined();
 
       await request(app.getHttpServer())
         .post('/auth/login')

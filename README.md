@@ -20,7 +20,7 @@ Flujos actuales:
 - **Auth/Login**: `AuthController` → `LocalAuthGuard` → `LoginCommand` → `LoginHandler` → `UserRepository` (Prisma) + `PasswordHasher`.
 - **School/Register**: `SchoolController` → `RegisterSchoolCommand` → `RegisterSchoolHandler` → `UserRepository` + `SchoolRepository`. Excepciones de dominio se traducen a HTTP 409/401 en la capa de interfaz.
 
-Para más contexto ver [`docs/architecture.md`](docs/architecture.md) y la guía paso a paso para nuevos endpoints en [`docs/api-development.md`](docs/api-development.md).
+Para más contexto ver [`docs/architecture.md`](docs/architecture.md), el modelo de base de datos en [`docs/database.md`](docs/database.md), la guía de autenticación con cookies HttpOnly en [`docs/auth-httpOnly-cookies.md`](docs/auth-httpOnly-cookies.md), las convenciones de documentación en código en [`docs/code-documentation.md`](docs/code-documentation.md) y la guía paso a paso para nuevos endpoints en [`docs/api-development.md`](docs/api-development.md).
 
 ## Estructura principal
 ```text
@@ -190,38 +190,3 @@ EOF
 - Reutiliza módulos de infraestructura comunes (`PersistenceModule`, `SecurityModule`) y evita importar `PrismaService` o clases Nest en la capa de aplicación.
 - Documenta cada flujo nuevo en `docs/` siguiendo la guía de APIs para conservar la trazabilidad técnica.
 
-
-
-
-
-
-
-
-
-
-{
-  "name": "Academia Deportiva Chocó 2026",
-  "address": "Cra 10 #20-30",
-  "phone": "+573001119999",
-  "country": "Colombia",
-  "state": "Chocó",
-  "city": "Quibdó",
-  "character": "PRIVATE",
-  "institutionType": "ACADEMY",
-  "taxId": "901999999-1",
-  "headquarters": "Sede Norte",
-  "website": "https://academiachoco2026.com",
-  "representativename": "Carlos Pérez",
-  "email": "academia2026@test.com",
-  "password": "Secret123",
-  "disciplineIds": [
-    "a0000000-0000-4000-8000-000000000001"
-  ],
-  "categories": [
-    {
-      "name": "Infantil",
-      "minAge": 6,
-      "maxAge": 12
-    }
-  ]
-}

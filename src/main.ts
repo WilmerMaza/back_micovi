@@ -1,9 +1,13 @@
 import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import { WinstonModule } from 'nest-winston';
 import { format, transports } from 'winston';
 import { AppModule } from './app.module';
+import { COOKIE_NAMES } from './infrastructure/config/cookie.config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -12,10 +16,33 @@ async function bootstrap() {
       format: format.combine(format.timestamp(), format.json()),
     }),
   });
-  // Habilitar CORS globalmente
-  app.enableCors();
 
-  // Pipes globales para validaciones y transformación
+  const configService = app.get(ConfigService);
+  const corsOrigins = configService.get<string[]>('CORS_ORIGINS', ['http://localhost:4200']);
+
+  app.use(helmet());
+  app.use(cookieParser());
+  app.setGlobalPrefix('api', {
+    exclude: ['document', 'document-json'],
+  });
+
+  app.enableCors({
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
+      if (!origin || corsOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(new Error('Origin not allowed by CORS'), false);
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Accept', 'Origin', 'X-Requested-With', 'X-CSRF-Token'],
+    exposedHeaders: ['Set-Cookie'],
+  });
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -24,16 +51,16 @@ async function bootstrap() {
     }),
   );
 
-  // Swagger setup
   const config = new DocumentBuilder()
     .setTitle('Micovi API')
-    .setDescription('Documentación de la API de Micovi')
-    .setVersion('1.0')
-    .addBearerAuth() // Para JWT si usas autenticación
+    .setDescription('API Micovi — autenticación con cookies HttpOnly')
+    .setVersion('2.0')
+    .addCookieAuth(COOKIE_NAMES.accessToken)
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('document', app, document); // URL: http://localhost:3000/document
-  await app.listen(process.env.PORT || 3000);
+  SwaggerModule.setup('document', app, document);
+
+  await app.listen(configService.get<number>('PORT', 3000));
 }
 void bootstrap();
