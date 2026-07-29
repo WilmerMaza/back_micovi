@@ -1,6 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { schoolCharacter } from 'src/domain/school/entities/school-chacharacter.enum';
 import { InstitutionType } from 'src/domain/school/entities/institution-type.enum';
+import { RepresentativeDocumentType } from 'src/domain/school/entities/representative-document-type.enum';
 import { CategoryDto } from './category.dto';
 import { SportDisciplineDto } from './sport-discipline.dto';
 
@@ -29,17 +30,17 @@ export class SchoolDto {
   })
   character: schoolCharacter;
 
-  @ApiProperty({ enum: InstitutionType, description: 'Type of sports institution' })
-  institutionType: InstitutionType;
+  @ApiProperty({ enum: InstitutionType, description: 'Type of sports institution', nullable: true })
+  institutionType: InstitutionType | null;
 
   @ApiProperty({ example: 'Colombia' })
   country: string;
 
-  @ApiProperty({ example: 'Bolívar' })
-  state: string;
+  @ApiProperty({ example: 'Bolívar', nullable: true })
+  state: string | null;
 
-  @ApiProperty({ example: 'Cartagena' })
-  city: string;
+  @ApiProperty({ example: 'Cartagena', nullable: true })
+  city: string | null;
 
   @ApiProperty({ example: 'Sede Principal', description: 'Headquarters', nullable: true })
   headquarters: string | null;
@@ -53,6 +54,13 @@ export class SchoolDto {
 
   @ApiProperty({ example: 'Juan Pérez', description: 'Legal representative name', nullable: true })
   representativename: string | null;
+
+  @ApiPropertyOptional({
+    enum: RepresentativeDocumentType,
+    description: 'Document type of the representative',
+    nullable: true,
+  })
+  representativeDocumentType: RepresentativeDocumentType | null;
 
   @ApiProperty({ example: null, description: 'URL of the institution logo', nullable: true })
   logo: string | null;
@@ -80,13 +88,14 @@ export class SchoolDto {
     userId: string,
     taxId: string,
     character: schoolCharacter,
-    institutionType: InstitutionType,
+    institutionType: InstitutionType | null,
     country: string,
-    state: string,
-    city: string,
+    state: string | null,
+    city: string | null,
     headquarters: string | null,
     website: string | null,
     representativename: string | null,
+    representativeDocumentType: RepresentativeDocumentType | null,
     logo: string | null,
     foundationDate: Date | null,
     latitude: number | null,
@@ -108,6 +117,7 @@ export class SchoolDto {
     this.headquarters = headquarters;
     this.website = website;
     this.representativename = representativename;
+    this.representativeDocumentType = representativeDocumentType;
     this.logo = logo;
     this.foundationDate = foundationDate;
     this.latitude = latitude;

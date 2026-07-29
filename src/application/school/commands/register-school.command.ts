@@ -1,5 +1,6 @@
 import { schoolCharacter } from 'src/domain/school/entities/school-chacharacter.enum';
 import { InstitutionType } from 'src/domain/school/entities/institution-type.enum';
+import { RepresentativeDocumentType } from 'src/domain/school/entities/representative-document-type.enum';
 
 export interface CategoryDescriptor {
   readonly name: string;
@@ -15,14 +16,15 @@ export class RegisterSchoolCommand {
     public readonly email: string,
     public readonly password: string,
     public readonly character: schoolCharacter,
-    public readonly institutionType: InstitutionType,
+    public readonly institutionType: InstitutionType | null,
     public readonly taxId: string,
     public readonly headquarters: string,
     public readonly country: string,
-    public readonly state: string,
-    public readonly city: string,
+    public readonly state: string | null,
+    public readonly city: string | null,
     public readonly website: string | null,
     public readonly representativename: string,
+    public readonly representativeDocumentType: RepresentativeDocumentType | null,
     public readonly disciplineIds: string[],
     public readonly categories: CategoryDescriptor[],
     public readonly logo: string | null,

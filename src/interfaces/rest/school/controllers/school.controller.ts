@@ -18,7 +18,7 @@ import { TaxIdAlreadyInUseException } from 'src/domain/school/exceptions/tax-id-
 import { RegisterSchoolDto } from '../dtos/register-school.dto';
 
 @ApiTags('Instituciones')
-@Controller('api/instituciones')
+@Controller('instituciones')
 export class SchoolController {
   constructor(private readonly commandBus: CommandBus) {}
 
@@ -55,14 +55,15 @@ export class SchoolController {
           dto.email,
           dto.password,
           dto.character,
-          dto.institutionType,
+          dto.institutionType ?? null,
           dto.taxId,
           dto.headquarters,
           dto.country,
-          dto.state,
-          dto.city,
+          dto.state ?? null,
+          dto.city ?? null,
           dto.website ?? null,
           dto.representativename,
+          dto.representativeDocumentType ?? null,
           dto.disciplineIds,
           dto.categories.map((c) => ({
             name: c.name,

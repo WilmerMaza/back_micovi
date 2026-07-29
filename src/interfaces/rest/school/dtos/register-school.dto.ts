@@ -14,9 +14,10 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { schoolCharacter } from 'src/domain/school/entities/school-chacharacter.enum';
 import { InstitutionType } from 'src/domain/school/entities/institution-type.enum';
+import { RepresentativeDocumentType } from 'src/domain/school/entities/representative-document-type.enum';
 
 export class CategoryDescriptorDto {
   @ApiProperty({ example: 'Infantil', description: 'Category name' })
@@ -70,21 +71,23 @@ export class RegisterSchoolDto {
   @MinLength(3)
   country: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 'Bolívar',
     description: 'State/region of the school',
   })
+  @IsOptional()
   @IsString()
   @MinLength(3)
-  state: string;
+  state?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 'Cartagena',
     description: 'City where the school is located',
   })
+  @IsOptional()
   @IsString()
   @MinLength(3)
-  city: string;
+  city?: string;
 
   @ApiProperty({
     example: 'PUBLIC',
@@ -94,13 +97,14 @@ export class RegisterSchoolDto {
   @IsEnum(schoolCharacter)
   character: schoolCharacter;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: InstitutionType.ACADEMY,
     enum: InstitutionType,
     description: 'Type of sports institution',
   })
+  @IsOptional()
   @IsEnum(InstitutionType)
-  institutionType: InstitutionType;
+  institutionType?: InstitutionType;
 
   @ApiProperty({
     example: '901123456-7',
@@ -134,6 +138,15 @@ export class RegisterSchoolDto {
   @IsString()
   @MinLength(3)
   representativename: string;
+
+  @ApiPropertyOptional({
+    example: RepresentativeDocumentType.CC,
+    enum: RepresentativeDocumentType,
+    description: 'Document type of the school representative',
+  })
+  @IsOptional()
+  @IsEnum(RepresentativeDocumentType)
+  representativeDocumentType?: RepresentativeDocumentType;
 
   @ApiProperty({
     example: 'escuela@correo.com',

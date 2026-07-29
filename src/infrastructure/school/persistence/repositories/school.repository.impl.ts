@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { Prisma, PrismaClient, School as PrismaSchool } from '@prisma/client';
 import { schoolCharacter } from 'src/domain/school/entities/school-chacharacter.enum';
 import { InstitutionType } from 'src/domain/school/entities/institution-type.enum';
+import { RepresentativeDocumentType } from 'src/domain/school/entities/representative-document-type.enum';
 import { School } from 'src/domain/school/entities/school.entity';
 import { SchoolRepository } from 'src/domain/school/repositories/school.repository';
 import { PrismaService } from 'src/infrastructure/persistence/prisma.service';
@@ -29,6 +30,7 @@ export class PrismaSchoolRepository implements SchoolRepository {
         headquarters: school.headquarters,
         website: school.website,
         representativename: school.representativename,
+        representativeDocumentType: school.representativeDocumentType,
         logo: school.logo,
         foundationDate: school.foundationDate,
         latitude: school.latitude,
@@ -82,6 +84,7 @@ export class PrismaSchoolRepository implements SchoolRepository {
       record.headquarters,
       record.website,
       record.representativename,
+      record.representativeDocumentType as RepresentativeDocumentType | null,
       record.logo,
       record.foundationDate,
       record.latitude,

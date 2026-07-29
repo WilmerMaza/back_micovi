@@ -51,16 +51,17 @@ model School {
   updatedAt          DateTime           @updatedAt
   deletedAt          DateTime?
   character          Character
-  institutionType    InstitutionType
+  institutionType    InstitutionType?
   taxId              String             @unique
   phone              String
   address            String
   country            String
-  state              String
-  city               String
+  state              String?
+  city               String?
   headquarters       String?
   website            String?
   representativename String?
+  representativeDocumentType RepresentativeDocumentType?
   logo               String?
   foundationDate     DateTime?
   latitude           Float?
@@ -203,4 +204,12 @@ enum SubscriptionStatus {
   SCHEDULED
   CANCELED
   EXPIRED
+}
+
+enum RepresentativeDocumentType {
+  CC
+  CE
+  NIT
+  TI
+  PA
 }

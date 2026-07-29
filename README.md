@@ -72,6 +72,10 @@ Registra una nueva institución deportiva con usuario administrador.
 - `disciplineIds` requerido — las disciplinas deben existir (404 si no)
 - `categories` requerido — sin nombres duplicados (case-insensitive)
 - `website` opcional con validación de URL
+- `institutionType` opcional (nullable)
+- `state` opcional (nullable)
+- `city` opcional (nullable)
+- `representativeDocumentType` opcional — valores: CC, CE, NIT, TI, PA
 
 **Body:**
 ```json
@@ -88,6 +92,7 @@ Registra una nueva institución deportiva con usuario administrador.
   "headquarters": "Sede Principal",
   "website": "https://ejemplo.com",
   "representativename": "Juan Pérez",
+  "representativeDocumentType": "CC",
   "email": "admin@academia.com",
   "password": "SuperSecret123",
   "disciplineIds": ["uuid-de-una-disciplina"],
@@ -176,6 +181,7 @@ curl.exe -X POST http://localhost:3000/api/instituciones ^
   "headquarters": "Sede Principal",
   "website": "https://ejemplo.com",
   "representativename": "Juan Perez",
+  "representativeDocumentType": "CC",
   "email": "test@test.com",
   "password": "Secret123",
   "disciplineIds": ["a0000000-0000-4000-8000-000000000001"],

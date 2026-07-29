@@ -2,6 +2,7 @@ import { EmailAlreadyInUseException } from 'src/domain/auth/exceptions/email-alr
 import { PasswordHasher } from 'src/domain/auth/services/password-hasher.service';
 import { Category } from 'src/domain/school/entities/category.entity';
 import { InstitutionType } from 'src/domain/school/entities/institution-type.enum';
+import { RepresentativeDocumentType } from 'src/domain/school/entities/representative-document-type.enum';
 import { schoolCharacter } from 'src/domain/school/entities/school-chacharacter.enum';
 import { School } from 'src/domain/school/entities/school.entity';
 import { SportDiscipline } from 'src/domain/school/entities/sport-discipline.entity';
@@ -33,6 +34,7 @@ function makeCommand(overrides?: Partial<RegisterSchoolCommand>): RegisterSchool
     overrides?.city ?? 'Medellin',
     overrides?.website ?? null,
     overrides?.representativename ?? 'Jane Doe',
+    overrides?.representativeDocumentType ?? null,
     overrides?.disciplineIds ?? [],
     overrides?.categories ?? [],
     overrides?.logo ?? null,
@@ -73,6 +75,7 @@ function createSchool(id: string, userId: string, command: RegisterSchoolCommand
     command.headquarters,
     command.website,
     command.representativename,
+    command.representativeDocumentType,
     command.logo,
     command.foundationDate,
     command.latitude,

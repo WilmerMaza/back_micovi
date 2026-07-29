@@ -19,6 +19,7 @@ import { UserRole } from '../src/domain/auth/entities/user-role.enum';
 import { School } from '../src/domain/school/entities/school.entity';
 import { schoolCharacter } from '../src/domain/school/entities/school-chacharacter.enum';
 import { InstitutionType } from '../src/domain/school/entities/institution-type.enum';
+import { RepresentativeDocumentType } from '../src/domain/school/entities/representative-document-type.enum';
 import { Category } from '../src/domain/school/entities/category.entity';
 import { SportDiscipline } from '../src/domain/school/entities/sport-discipline.entity';
 import { PrismaService } from '../src/infrastructure/persistence/prisma.service';
@@ -345,6 +346,7 @@ const validPayload = {
   headquarters: 'Sede Principal',
   website: 'https://academia.example.com',
   representativename: 'Juan Pérez',
+  representativeDocumentType: RepresentativeDocumentType.CC,
   email: 'admin@academia.com',
   password: 'SuperSecret123',
   disciplineIds: [disciplineId],
@@ -404,6 +406,7 @@ describe('Auth & School flows (e2e)', () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
+    app.setGlobalPrefix('api');
     app.useGlobalPipes(
       new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
     );
@@ -439,6 +442,7 @@ describe('Auth & School flows (e2e)', () => {
         headquarters: validPayload.headquarters,
         website: validPayload.website,
         representativename: validPayload.representativename,
+        representativeDocumentType: validPayload.representativeDocumentType,
         categories: [{ name: 'Infantil', minAge: 6, maxAge: 12 }],
         disciplines: [{ id: disciplineId, name: 'Fútbol' }],
       });
@@ -487,6 +491,32 @@ describe('Auth & School flows (e2e)', () => {
       expect(response.body.longitude).toBe(-66.9036);
     });
 
+    it('registers an institution without optional institutionType, state, city, and representativeDocumentType', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/instituciones')
+        .send({
+          name: 'Academia Sin Opcionales',
+          address: 'Cra. 10 #5-20',
+          phone: '+573009998877',
+          country: 'Colombia',
+          character: schoolCharacter.PUBLIC,
+          taxId: '801987654-3',
+          headquarters: 'Sede Norte',
+          representativename: 'María López',
+          email: 'admin@academia2.com',
+          password: 'SuperSecret456',
+          disciplineIds: [disciplineId],
+          categories: [{ name: 'Adultos', minAge: 18, maxAge: 40 }],
+        })
+        .expect(201);
+
+      expect(response.body.institutionType).toBeNull();
+      expect(response.body.state).toBeNull();
+      expect(response.body.city).toBeNull();
+      expect(response.body.representativeDocumentType).toBeNull();
+      expect(response.body.name).toBe('Academia Sin Opcionales');
+    });
+
     it('returns 409 when email is already in use', async () => {
       await request(app.getHttpServer()).post('/api/instituciones').send(validPayload).expect(201);
 
@@ -526,7 +556,7 @@ describe('Auth & School flows (e2e)', () => {
       await request(app.getHttpServer()).post('/api/instituciones').send(validPayload).expect(201);
 
       const loginResponse = await request(app.getHttpServer())
-        .post('/auth/login')
+        .post('/api/auth/login')
         .send({ email: validPayload.email, password: validPayload.password })
         .expect(201);
 
@@ -538,7 +568,7 @@ describe('Auth & School flows (e2e)', () => {
       expect(loginResponse.body.schoolId).toBeDefined();
 
       await request(app.getHttpServer())
-        .post('/auth/login')
+        .post('/api/auth/login')
         .send({ email: validPayload.email, password: 'WrongPassword' })
         .expect(401);
     });
