@@ -1,6 +1,5 @@
 import { Type } from 'class-transformer';
 import {
-  ArrayNotEmpty,
   IsArray,
   IsDateString,
   IsEmail,
@@ -106,13 +105,14 @@ export class RegisterSchoolDto {
   @IsEnum(InstitutionType)
   institutionType?: InstitutionType;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: '901123456-7',
     description: 'Tax ID (NIT/RUC) of the institution',
   })
+  @IsOptional()
   @IsString()
   @MinLength(5)
-  taxId: string;
+  taxId?: string;
 
   @ApiProperty({
     example: 'Sede Principal',
@@ -199,22 +199,22 @@ export class RegisterSchoolDto {
   @IsNumber()
   longitude?: number;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: ['uuid-discipline-1', 'uuid-discipline-2'],
     description: 'IDs of existing sport disciplines to associate',
   })
+  @IsOptional()
   @IsArray()
-  @ArrayNotEmpty()
   @IsUUID('all', { each: true })
-  disciplineIds: string[];
+  disciplineIds?: string[];
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: [CategoryDescriptorDto],
     description: 'Age categories to create for the institution',
   })
+  @IsOptional()
   @IsArray()
-  @ArrayNotEmpty()
   @ValidateNested({ each: true })
   @Type(() => CategoryDescriptorDto)
-  categories: CategoryDescriptorDto[];
+  categories?: CategoryDescriptorDto[];
 }

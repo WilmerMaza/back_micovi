@@ -21,8 +21,8 @@ export class SchoolDto {
   @ApiProperty({ example: 'uuid-v4', description: 'ID of the associated user account' })
   userId: string;
 
-  @ApiProperty({ example: '901123456-7', description: 'Tax ID (NIT/RUC)' })
-  taxId: string;
+  @ApiPropertyOptional({ example: '901123456-7', description: 'Tax ID (NIT/RUC)' })
+  taxId: string | null;
 
   @ApiProperty({
     enum: schoolCharacter,
@@ -86,7 +86,7 @@ export class SchoolDto {
     address: string,
     phone: string,
     userId: string,
-    taxId: string,
+    taxId: string | null,
     character: schoolCharacter,
     institutionType: InstitutionType | null,
     country: string,

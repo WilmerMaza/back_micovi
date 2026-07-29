@@ -19,28 +19,29 @@ import { RegisterSchoolCommand } from '../register-school.command';
 import { RegisterSchoolHandler } from './register-school.handler';
 
 function makeCommand(overrides?: Partial<RegisterSchoolCommand>): RegisterSchoolCommand {
+  const o = overrides ?? {};
   return new RegisterSchoolCommand(
-    overrides?.name ?? 'My School',
-    overrides?.address ?? 'Main St 123',
-    overrides?.phone ?? '5551234',
-    overrides?.email ?? 'team@example.com',
-    overrides?.password ?? 'Secret123',
-    overrides?.character ?? schoolCharacter.PRIVATE,
-    overrides?.institutionType ?? InstitutionType.ACADEMY,
-    overrides?.taxId ?? '901123456-7',
-    overrides?.headquarters ?? 'Downtown HQ',
-    overrides?.country ?? 'CO',
-    overrides?.state ?? 'Antioquia',
-    overrides?.city ?? 'Medellin',
-    overrides?.website ?? null,
-    overrides?.representativename ?? 'Jane Doe',
-    overrides?.representativeDocumentType ?? null,
-    overrides?.disciplineIds ?? [],
-    overrides?.categories ?? [],
-    overrides?.logo ?? null,
-    overrides?.foundationDate ?? null,
-    overrides?.latitude ?? null,
-    overrides?.longitude ?? null,
+    o.name ?? 'My School',
+    o.address ?? 'Main St 123',
+    o.phone ?? '5551234',
+    o.email ?? 'team@example.com',
+    o.password ?? 'Secret123',
+    o.character ?? schoolCharacter.PRIVATE,
+    o.institutionType ?? InstitutionType.ACADEMY,
+    o.taxId !== undefined ? o.taxId : '901123456-7',
+    o.headquarters ?? 'Downtown HQ',
+    o.country ?? 'CO',
+    o.state ?? 'Antioquia',
+    o.city ?? 'Medellin',
+    o.website ?? null,
+    o.representativename ?? 'Jane Doe',
+    o.representativeDocumentType ?? null,
+    o.disciplineIds !== undefined ? o.disciplineIds : [],
+    o.categories !== undefined ? o.categories : [],
+    o.logo ?? null,
+    o.foundationDate ?? null,
+    o.latitude ?? null,
+    o.longitude ?? null,
   );
 }
 
@@ -448,5 +449,215 @@ describe('RegisterSchoolHandler', () => {
     expect(createdSchoolArg.foundationDate).toEqual(foundationDate);
     expect(createdSchoolArg.latitude).toBe(10.4806);
     expect(createdSchoolArg.longitude).toBe(-66.9036);
+  });
+
+  it('registers without taxId when not provided', async () => {
+    const passwordHasher = createPasswordHasherMock();
+    passwordHasher.hash.mockResolvedValue('hashed');
+
+    const lookupUserRepository = { findByEmail: jest.fn().mockResolvedValue(null) };
+    const lookupSchoolRepository = {
+      findByTaxId: jest.fn(),
+      findByName: jest.fn().mockResolvedValue(null),
+    };
+    const discipline = new SportDiscipline('disc-1', 'Fútbol', null);
+    const lookupDisciplineRepo = { findAllByIds: jest.fn().mockResolvedValue([discipline]) };
+
+    const cmd = makeCommand({
+      taxId: null,
+      disciplineIds: ['disc-1'],
+      categories: [{ name: 'Infantil', minAge: 6, maxAge: 12 }],
+    });
+
+    const txUserRepo = { create: jest.fn().mockResolvedValue({ id: 'user-id' }) };
+    const txSchoolRepo = {
+      create: jest
+        .fn()
+        .mockImplementation((school: School) =>
+          Promise.resolve(createSchool('school-id', 'user-id', cmd)),
+        ),
+    };
+    const txCategoryRepo = {
+      create: jest.fn().mockImplementation((cat: Category) => Promise.resolve(cat)),
+    };
+    const txDisciplineRepo = { addSchoolDiscipline: jest.fn() };
+
+    const unitOfWork = createUnitOfWorkMock(() => ({
+      userRepository: txUserRepo as any,
+      schoolRepository: txSchoolRepo as any,
+      categoryRepository: txCategoryRepo as any,
+      sportDisciplineRepository: txDisciplineRepo as any,
+    }));
+
+    const handler = new RegisterSchoolHandler(
+      unitOfWork,
+      lookupUserRepository as any,
+      passwordHasher,
+      lookupSchoolRepository as any,
+      lookupDisciplineRepo as any,
+    );
+
+    const result = await handler.execute(cmd);
+
+    expect(result.taxId).toBeNull();
+    expect(lookupSchoolRepository.findByTaxId).not.toHaveBeenCalled();
+    expect(txSchoolRepo.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('registers without disciplineIds when not provided', async () => {
+    const passwordHasher = createPasswordHasherMock();
+    passwordHasher.hash.mockResolvedValue('hashed');
+
+    const lookupUserRepository = { findByEmail: jest.fn().mockResolvedValue(null) };
+    const lookupSchoolRepository = {
+      findByTaxId: jest.fn().mockResolvedValue(null),
+      findByName: jest.fn().mockResolvedValue(null),
+    };
+    const lookupDisciplineRepo = { findAllByIds: jest.fn() };
+
+    const cmd = makeCommand({
+      taxId: '999999999-9',
+      disciplineIds: null,
+      categories: [{ name: 'Infantil', minAge: 6, maxAge: 12 }],
+    });
+
+    const txUserRepo = { create: jest.fn().mockResolvedValue({ id: 'user-id' }) };
+    const txSchoolRepo = {
+      create: jest
+        .fn()
+        .mockImplementation((school: School) =>
+          Promise.resolve(createSchool('school-id', 'user-id', cmd)),
+        ),
+    };
+    const txCategoryRepo = {
+      create: jest.fn().mockImplementation((cat: Category) => Promise.resolve(cat)),
+    };
+    const txDisciplineRepo = { addSchoolDiscipline: jest.fn() };
+
+    const unitOfWork = createUnitOfWorkMock(() => ({
+      userRepository: txUserRepo as any,
+      schoolRepository: txSchoolRepo as any,
+      categoryRepository: txCategoryRepo as any,
+      sportDisciplineRepository: txDisciplineRepo as any,
+    }));
+
+    const handler = new RegisterSchoolHandler(
+      unitOfWork,
+      lookupUserRepository as any,
+      passwordHasher,
+      lookupSchoolRepository as any,
+      lookupDisciplineRepo as any,
+    );
+
+    const result = await handler.execute(cmd);
+
+    expect(result.disciplines).toHaveLength(0);
+    expect(lookupDisciplineRepo.findAllByIds).not.toHaveBeenCalled();
+    expect(txDisciplineRepo.addSchoolDiscipline).not.toHaveBeenCalled();
+  });
+
+  it('registers without categories when not provided', async () => {
+    const passwordHasher = createPasswordHasherMock();
+    passwordHasher.hash.mockResolvedValue('hashed');
+
+    const lookupUserRepository = { findByEmail: jest.fn().mockResolvedValue(null) };
+    const lookupSchoolRepository = {
+      findByTaxId: jest.fn().mockResolvedValue(null),
+      findByName: jest.fn().mockResolvedValue(null),
+    };
+    const discipline = new SportDiscipline('disc-1', 'Fútbol', null);
+    const lookupDisciplineRepo = { findAllByIds: jest.fn().mockResolvedValue([discipline]) };
+
+    const cmd = makeCommand({
+      taxId: '888888888-8',
+      disciplineIds: ['disc-1'],
+      categories: null,
+    });
+
+    const txUserRepo = { create: jest.fn().mockResolvedValue({ id: 'user-id' }) };
+    const txSchoolRepo = {
+      create: jest
+        .fn()
+        .mockImplementation((school: School) =>
+          Promise.resolve(createSchool('school-id', 'user-id', cmd)),
+        ),
+    };
+    const txCategoryRepo = { create: jest.fn() };
+    const txDisciplineRepo = { addSchoolDiscipline: jest.fn() };
+
+    const unitOfWork = createUnitOfWorkMock(() => ({
+      userRepository: txUserRepo as any,
+      schoolRepository: txSchoolRepo as any,
+      categoryRepository: txCategoryRepo as any,
+      sportDisciplineRepository: txDisciplineRepo as any,
+    }));
+
+    const handler = new RegisterSchoolHandler(
+      unitOfWork,
+      lookupUserRepository as any,
+      passwordHasher,
+      lookupSchoolRepository as any,
+      lookupDisciplineRepo as any,
+    );
+
+    const result = await handler.execute(cmd);
+
+    expect(result.categories).toHaveLength(0);
+    expect(txCategoryRepo.create).not.toHaveBeenCalled();
+  });
+
+  it('registers with only core fields (no taxId, no disciplineIds, no categories)', async () => {
+    const passwordHasher = createPasswordHasherMock();
+    passwordHasher.hash.mockResolvedValue('hashed');
+
+    const lookupUserRepository = { findByEmail: jest.fn().mockResolvedValue(null) };
+    const lookupSchoolRepository = {
+      findByTaxId: jest.fn(),
+      findByName: jest.fn().mockResolvedValue(null),
+    };
+    const lookupDisciplineRepo = { findAllByIds: jest.fn() };
+
+    const cmd = makeCommand({
+      taxId: null,
+      disciplineIds: null,
+      categories: null,
+    });
+
+    const txUserRepo = { create: jest.fn().mockResolvedValue({ id: 'user-id' }) };
+    const txSchoolRepo = {
+      create: jest
+        .fn()
+        .mockImplementation((school: School) =>
+          Promise.resolve(createSchool('school-id', 'user-id', cmd)),
+        ),
+    };
+    const txCategoryRepo = { create: jest.fn() };
+    const txDisciplineRepo = { addSchoolDiscipline: jest.fn() };
+
+    const unitOfWork = createUnitOfWorkMock(() => ({
+      userRepository: txUserRepo as any,
+      schoolRepository: txSchoolRepo as any,
+      categoryRepository: txCategoryRepo as any,
+      sportDisciplineRepository: txDisciplineRepo as any,
+    }));
+
+    const handler = new RegisterSchoolHandler(
+      unitOfWork,
+      lookupUserRepository as any,
+      passwordHasher,
+      lookupSchoolRepository as any,
+      lookupDisciplineRepo as any,
+    );
+
+    const result = await handler.execute(cmd);
+
+    expect(result.taxId).toBeNull();
+    expect(result.categories).toHaveLength(0);
+    expect(result.disciplines).toHaveLength(0);
+    expect(lookupSchoolRepository.findByTaxId).not.toHaveBeenCalled();
+    expect(lookupDisciplineRepo.findAllByIds).not.toHaveBeenCalled();
+    expect(txCategoryRepo.create).not.toHaveBeenCalled();
+    expect(txDisciplineRepo.addSchoolDiscipline).not.toHaveBeenCalled();
+    expect(txSchoolRepo.create).toHaveBeenCalledTimes(1);
   });
 });

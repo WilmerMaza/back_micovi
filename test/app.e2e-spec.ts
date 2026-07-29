@@ -491,6 +491,102 @@ describe('Auth & School flows (e2e)', () => {
       expect(response.body.longitude).toBe(-66.9036);
     });
 
+    it('registers without taxId when other fields are present', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/instituciones')
+        .send({
+          name: 'Sin TaxId',
+          address: 'Av. Siempre Viva 123',
+          phone: '+573001118800',
+          country: 'Perú',
+          character: schoolCharacter.PRIVATE,
+          headquarters: 'Sede Central',
+          representativename: 'Ana Torres',
+          email: 'no-taxid@ejemplo.com',
+          password: 'SecurePass1',
+          disciplineIds: [disciplineId],
+          categories: [{ name: 'Juvenil', minAge: 13, maxAge: 17 }],
+        })
+        .expect(201);
+
+      expect(response.body.taxId).toBeNull();
+      expect(response.body.disciplines).toHaveLength(1);
+      expect(response.body.categories).toHaveLength(1);
+    });
+
+    it('registers without disciplineIds when other fields are present', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/instituciones')
+        .send({
+          name: 'Sin Disciplinas',
+          address: 'Carrera 8 #15-70',
+          phone: '+573001117700',
+          country: 'Colombia',
+          character: schoolCharacter.PRIVATE,
+          institutionType: InstitutionType.CLUB,
+          taxId: '777777777-7',
+          headquarters: 'Sede Club',
+          representativename: 'Pedro López',
+          email: 'sin-disciplinas@ejemplo.com',
+          password: 'SecurePass2',
+          categories: [{ name: 'Infantil', minAge: 6, maxAge: 12 }],
+        })
+        .expect(201);
+
+      expect(response.body.taxId).toBe('777777777-7');
+      expect(response.body.disciplines).toHaveLength(0);
+      expect(response.body.categories).toHaveLength(1);
+    });
+
+    it('registers without categories when other fields are present', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/instituciones')
+        .send({
+          name: 'Sin Categorías',
+          address: 'Plaza Mayor 1',
+          phone: '+573001116600',
+          country: 'México',
+          character: schoolCharacter.PUBLIC,
+          institutionType: InstitutionType.ACADEMY,
+          taxId: '666666666-6',
+          headquarters: 'Sede Principal',
+          representativename: 'María García',
+          email: 'sin-categorias@ejemplo.com',
+          password: 'SecurePass3',
+          disciplineIds: [disciplineId],
+        })
+        .expect(201);
+
+      expect(response.body.taxId).toBe('666666666-6');
+      expect(response.body.disciplines).toHaveLength(1);
+      expect(response.body.categories).toHaveLength(0);
+    });
+
+    it('registers with only core fields (no taxId, no disciplineIds, no categories)', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/instituciones')
+        .send({
+          name: 'Institución Básica',
+          address: 'Calle 10 #20-30',
+          phone: '+573001119900',
+          country: 'Colombia',
+          character: schoolCharacter.PUBLIC,
+          headquarters: 'Sede Única',
+          representativename: 'Carlos Ruiz',
+          email: 'basica@institucion.com',
+          password: 'Password123',
+        })
+        .expect(201);
+
+      expect(response.body.taxId).toBeNull();
+      expect(response.body.institutionType).toBeNull();
+      expect(response.body.state).toBeNull();
+      expect(response.body.city).toBeNull();
+      expect(response.body.categories).toHaveLength(0);
+      expect(response.body.disciplines).toHaveLength(0);
+      expect(response.body.name).toBe('Institución Básica');
+    });
+
     it('registers an institution without optional institutionType, state, city, and representativeDocumentType', async () => {
       const response = await request(app.getHttpServer())
         .post('/api/instituciones')

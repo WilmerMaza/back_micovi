@@ -52,7 +52,7 @@ model School {
   deletedAt          DateTime?
   character          Character
   institutionType    InstitutionType?
-  taxId              String             @unique
+  taxId              String?            @unique
   phone              String
   address            String
   country            String

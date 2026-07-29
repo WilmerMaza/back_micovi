@@ -9,7 +9,7 @@ export class School {
     public readonly userId: string,
     public readonly character: schoolCharacter,
     public readonly institutionType: InstitutionType | null,
-    public readonly taxId: string,
+    public readonly taxId: string | null,
     public readonly phone: string,
     public readonly address: string,
     public readonly country: string,

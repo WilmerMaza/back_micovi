@@ -68,9 +68,9 @@ Registra una nueva institución deportiva con usuario administrador.
 **Reglas de negocio:**
 - `name` debe ser único (409 si ya existe)
 - `email` debe ser único (409 si ya existe)
-- `taxId` debe ser único (409 si ya existe)
-- `disciplineIds` requerido — las disciplinas deben existir (404 si no)
-- `categories` requerido — sin nombres duplicados (case-insensitive)
+- `taxId` opcional — si se envía, debe ser único (409 si ya existe); si se omite, se guarda NULL
+- `disciplineIds` opcional — si se envía, las disciplinas deben existir (404 si no)
+- `categories` opcional — si se envía, sin nombres duplicados (case-insensitive)
 - `website` opcional con validación de URL
 - `institutionType` opcional (nullable)
 - `state` opcional (nullable)

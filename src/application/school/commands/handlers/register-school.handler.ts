@@ -8,6 +8,7 @@ import { UserRepository } from 'src/domain/auth/repositories/user.repository';
 import { PasswordHasher } from 'src/domain/auth/services/password-hasher.service';
 import { School } from 'src/domain/school/entities/school.entity';
 import { Category } from 'src/domain/school/entities/category.entity';
+import { SportDiscipline } from 'src/domain/school/entities/sport-discipline.entity';
 import { SchoolRepository } from 'src/domain/school/repositories/school.repository';
 import { SportDisciplineRepository } from 'src/domain/school/repositories/sport-discipline.repository';
 import { DisciplineNotFoundException } from 'src/domain/school/exceptions/discipline-not-found.exception';
@@ -38,10 +39,12 @@ export class RegisterSchoolHandler implements ICommandHandler<RegisterSchoolComm
       throw new EmailAlreadyInUseException(command.email);
     }
 
-    const existingSchoolByTaxId = await this.schoolRepository.findByTaxId(command.taxId);
-    if (existingSchoolByTaxId) {
-      this.logger.warn(`Registration blocked: taxId already in use — ${command.taxId}`);
-      throw new TaxIdAlreadyInUseException(command.taxId);
+    if (command.taxId) {
+      const existingSchoolByTaxId = await this.schoolRepository.findByTaxId(command.taxId);
+      if (existingSchoolByTaxId) {
+        this.logger.warn(`Registration blocked: taxId already in use — ${command.taxId}`);
+        throw new TaxIdAlreadyInUseException(command.taxId);
+      }
     }
 
     const existingSchoolByName = await this.schoolRepository.findByName(command.name);
@@ -50,11 +53,13 @@ export class RegisterSchoolHandler implements ICommandHandler<RegisterSchoolComm
       throw new NameAlreadyInUseException(command.name);
     }
 
-    const names = command.categories.map((c) => c.name.toLowerCase().trim());
-    const uniqueNames = new Set(names);
-    if (uniqueNames.size !== names.length) {
-      const duplicates = names.filter((n, i) => names.indexOf(n) !== i);
-      throw new Error(`Duplicate category names: ${[...new Set(duplicates)].join(', ')}`);
+    if (command.categories && command.categories.length > 0) {
+      const names = command.categories.map((c) => c.name.toLowerCase().trim());
+      const uniqueNames = new Set(names);
+      if (uniqueNames.size !== names.length) {
+        const duplicates = names.filter((n, i) => names.indexOf(n) !== i);
+        throw new Error(`Duplicate category names: ${[...new Set(duplicates)].join(', ')}`);
+      }
     }
 
     const userId = randomUUID();
@@ -71,14 +76,19 @@ export class RegisterSchoolHandler implements ICommandHandler<RegisterSchoolComm
       null,
     );
 
-    const found = await this.sportDisciplineRepository.findAllByIds(command.disciplineIds);
-    if (found.length !== command.disciplineIds.length) {
-      const foundIds = new Set(found.map((d) => d.id));
-      const missingId = command.disciplineIds.find((id) => !foundIds.has(id));
-      throw new DisciplineNotFoundException(missingId!);
+    const found: SportDiscipline[] = [];
+    if (command.disciplineIds && command.disciplineIds.length > 0) {
+      const allFound = await this.sportDisciplineRepository.findAllByIds(command.disciplineIds);
+      if (allFound.length !== command.disciplineIds.length) {
+        const foundIds = new Set(allFound.map((d) => d.id));
+        const missingId = command.disciplineIds.find((id) => !foundIds.has(id));
+        throw new DisciplineNotFoundException(missingId!);
+      }
+      found.push(...allFound);
     }
 
-    this.logger.log(`Registering institution: ${command.name} (taxId: ${command.taxId})`);
+    const taxIdLog = command.taxId ? ` (taxId: ${command.taxId})` : '';
+    this.logger.log(`Registering institution: ${command.name}${taxIdLog}`);
 
     return this.unitOfWork.execute(
       async ({
@@ -112,19 +122,22 @@ export class RegisterSchoolHandler implements ICommandHandler<RegisterSchoolComm
         );
         const createdSchool = await txSchoolRepo.create(school);
 
-        const createdCategories = await Promise.all(
-          command.categories.map((cat) =>
-            txCategoryRepo.create(
-              new Category(
-                randomUUID(),
-                cat.name,
-                createdSchool.id,
-                cat.minAge ?? null,
-                cat.maxAge ?? null,
+        let createdCategories: Category[] = [];
+        if (command.categories && command.categories.length > 0) {
+          createdCategories = await Promise.all(
+            command.categories.map((cat) =>
+              txCategoryRepo.create(
+                new Category(
+                  randomUUID(),
+                  cat.name,
+                  createdSchool.id,
+                  cat.minAge ?? null,
+                  cat.maxAge ?? null,
+                ),
               ),
             ),
-          ),
-        );
+          );
+        }
 
         for (const discipline of found) {
           await txDisciplineRepo.addSchoolDiscipline(createdSchool.id, discipline.id);
