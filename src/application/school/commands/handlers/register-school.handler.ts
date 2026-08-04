@@ -106,8 +106,6 @@ export class RegisterSchoolHandler implements ICommandHandler<RegisterSchoolComm
           command.character,
           command.institutionType,
           command.taxId,
-          command.phone,
-          command.address,
           command.country,
           command.state,
           command.city,
@@ -148,8 +146,6 @@ export class RegisterSchoolHandler implements ICommandHandler<RegisterSchoolComm
         return new SchoolDto(
           createdSchool.id,
           createdSchool.name,
-          command.address,
-          command.phone,
           createdSchool.userId,
           createdSchool.taxId,
           createdSchool.character,

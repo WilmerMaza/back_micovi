@@ -12,12 +12,6 @@ export class SchoolDto {
   @ApiProperty({ example: 'Escuela Deportiva Águilas', description: 'Institution name' })
   name: string;
 
-  @ApiProperty({ example: 'Cra. 45 #23-90', description: 'Institution address' })
-  address: string;
-
-  @ApiProperty({ example: '+573001112233', description: 'Institution phone number' })
-  phone: string;
-
   @ApiProperty({ example: 'uuid-v4', description: 'ID of the associated user account' })
   userId: string;
 
@@ -83,8 +77,6 @@ export class SchoolDto {
   constructor(
     id: string,
     name: string,
-    address: string,
-    phone: string,
     userId: string,
     taxId: string | null,
     character: schoolCharacter,
@@ -105,8 +97,6 @@ export class SchoolDto {
   ) {
     this.id = id;
     this.name = name;
-    this.address = address;
-    this.phone = phone;
     this.userId = userId;
     this.taxId = taxId;
     this.character = character;

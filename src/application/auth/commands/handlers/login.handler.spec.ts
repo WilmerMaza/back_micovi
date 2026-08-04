@@ -33,7 +33,17 @@ describe('LoginHandler', () => {
   });
 
   it('returns the authenticated user DTO when credentials are valid', async () => {
-    const user = new User('user-1', 'team@example.com', 'hashed-password', UserRole.SCHOOL);
+    const user = new User(
+      'user-1',
+      'team@example.com',
+      'hashed-password',
+      UserRole.SCHOOL,
+      null,
+      null,
+      null,
+      null,
+      null,
+    );
     userRepository.findByEmail.mockResolvedValue(user);
     passwordHasher.compare.mockResolvedValue(true);
     schoolRepository.findByUserId.mockResolvedValue({ id: 'school-1' } as any);
@@ -60,7 +70,17 @@ describe('LoginHandler', () => {
   });
 
   it('throws InvalidCredentialsException when password is invalid', async () => {
-    const user = new User('user-1', 'team@example.com', 'hashed-password', UserRole.SCHOOL);
+    const user = new User(
+      'user-1',
+      'team@example.com',
+      'hashed-password',
+      UserRole.SCHOOL,
+      null,
+      null,
+      null,
+      null,
+      null,
+    );
     userRepository.findByEmail.mockResolvedValue(user);
     passwordHasher.compare.mockResolvedValue(false);
 

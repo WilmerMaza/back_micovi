@@ -66,7 +66,9 @@ class InMemorySchoolRepository implements SchoolRepository {
 
   async create(school: School): Promise<School> {
     this.schools.set(school.id, school);
-    this.taxIndex.set(school.taxId, school.id);
+    if (school.taxId) {
+      this.taxIndex.set(school.taxId, school.id);
+    }
     return school;
   }
 
@@ -101,7 +103,9 @@ class InMemorySchoolRepository implements SchoolRepository {
     this.schools = new Map(snapshot);
     this.taxIndex.clear();
     for (const [id, s] of this.schools) {
-      this.taxIndex.set(s.taxId, id);
+      if (s.taxId) {
+        this.taxIndex.set(s.taxId, id);
+      }
     }
   }
 
@@ -307,8 +311,6 @@ class InMemoryUnitOfWork implements UnitOfWork {
           countActiveSubscriptionsByPlan: jest.fn(),
           getUsageMetrics: jest.fn(),
         } as any,
-        planRepository: undefined as any,
-        subscriptionRepository: undefined as any,
         coachRepository: undefined as any,
         athleteRepository: undefined as any,
       });
@@ -339,8 +341,6 @@ const disciplineId = '11111111-1111-4111-8111-111111111111';
 
 const validPayload = {
   name: 'Mi Academia Deportiva',
-  address: 'Cra. 45 #23-90',
-  phone: '+573001112233',
   country: 'Colombia',
   state: 'Bolívar',
   city: 'Cartagena',
@@ -435,8 +435,6 @@ describe('Auth & School flows (e2e)', () => {
 
       expect(response.body).toMatchObject({
         name: validPayload.name,
-        address: validPayload.address,
-        phone: validPayload.phone,
         taxId: validPayload.taxId,
         character: validPayload.character,
         institutionType: validPayload.institutionType,
@@ -500,8 +498,6 @@ describe('Auth & School flows (e2e)', () => {
         .post('/api/instituciones')
         .send({
           name: 'Sin TaxId',
-          address: 'Av. Siempre Viva 123',
-          phone: '+573001118800',
           country: 'Perú',
           character: schoolCharacter.PRIVATE,
           headquarters: 'Sede Central',
@@ -523,8 +519,6 @@ describe('Auth & School flows (e2e)', () => {
         .post('/api/instituciones')
         .send({
           name: 'Sin Disciplinas',
-          address: 'Carrera 8 #15-70',
-          phone: '+573001117700',
           country: 'Colombia',
           character: schoolCharacter.PRIVATE,
           institutionType: InstitutionType.CLUB,
@@ -547,8 +541,6 @@ describe('Auth & School flows (e2e)', () => {
         .post('/api/instituciones')
         .send({
           name: 'Sin Categorías',
-          address: 'Plaza Mayor 1',
-          phone: '+573001116600',
           country: 'México',
           character: schoolCharacter.PUBLIC,
           institutionType: InstitutionType.ACADEMY,
@@ -571,8 +563,6 @@ describe('Auth & School flows (e2e)', () => {
         .post('/api/instituciones')
         .send({
           name: 'Institución Básica',
-          address: 'Calle 10 #20-30',
-          phone: '+573001119900',
           country: 'Colombia',
           character: schoolCharacter.PUBLIC,
           headquarters: 'Sede Única',
@@ -596,8 +586,6 @@ describe('Auth & School flows (e2e)', () => {
         .post('/api/instituciones')
         .send({
           name: 'Academia Sin Opcionales',
-          address: 'Cra. 10 #5-20',
-          phone: '+573009998877',
           country: 'Colombia',
           character: schoolCharacter.PUBLIC,
           taxId: '801987654-3',

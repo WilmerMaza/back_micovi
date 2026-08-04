@@ -22,8 +22,6 @@ function makeCommand(overrides?: Partial<RegisterSchoolCommand>): RegisterSchool
   const o = overrides ?? {};
   return new RegisterSchoolCommand(
     o.name ?? 'My School',
-    o.address ?? 'Main St 123',
-    o.phone ?? '5551234',
     o.email ?? 'team@example.com',
     o.password ?? 'Secret123',
     o.character ?? schoolCharacter.PRIVATE,
@@ -68,8 +66,6 @@ function createSchool(id: string, userId: string, command: RegisterSchoolCommand
     command.character,
     command.institutionType,
     command.taxId,
-    command.phone,
-    command.address,
     command.country,
     command.state,
     command.city,
@@ -217,8 +213,6 @@ describe('RegisterSchoolHandler', () => {
 
     expect(result.id).toBe('school-id');
     expect(result.name).toBe(cmd.name);
-    expect(result.address).toBe(cmd.address);
-    expect(result.phone).toBe(cmd.phone);
     expect(result.userId).toBe('user-id');
     expect(result.taxId).toBe(cmd.taxId);
     expect(result.character).toBe(cmd.character);

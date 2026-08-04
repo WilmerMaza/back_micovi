@@ -10,8 +10,6 @@ export class School {
     public readonly character: schoolCharacter,
     public readonly institutionType: InstitutionType | null,
     public readonly taxId: string | null,
-    public readonly phone: string,
-    public readonly address: string,
     public readonly country: string,
     public readonly state: string | null,
     public readonly city: string | null,

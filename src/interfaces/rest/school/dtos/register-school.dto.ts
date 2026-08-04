@@ -49,6 +49,7 @@ export class RegisterSchoolDto {
     example: 'Cra. 45 #23-90',
     description: 'School physical address',
   })
+  @IsOptional()
   @IsString()
   @MinLength(1)
   address: string;
@@ -57,6 +58,7 @@ export class RegisterSchoolDto {
     example: '+573001112233',
     description: 'School contact phone number',
   })
+  @IsOptional()
   @IsString()
   @MinLength(7)
   phone: string;

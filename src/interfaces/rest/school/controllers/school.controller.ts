@@ -50,8 +50,6 @@ export class SchoolController {
       return await this.commandBus.execute(
         new RegisterSchoolCommand(
           dto.name,
-          dto.address,
-          dto.phone,
           dto.email,
           dto.password,
           dto.character,
