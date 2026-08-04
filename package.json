@@ -24,7 +24,11 @@
     "sync:from-db": "npx prisma db pull && npx prisma generate",
     "db:pull": "prisma db pull",
     "db:migration:generate": "prisma migrate dev --name sync-from-db --create-only",
-    "db:migration:resolve": "ts-node prisma/scripts/resolve-latest.ts"
+    "db:migration:resolve": "ts-node prisma/scripts/resolve-latest.ts",
+    "db:seed": "ts-node prisma/seed.ts"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   },
   "lint-staged": {
     "*.{js,ts}": [

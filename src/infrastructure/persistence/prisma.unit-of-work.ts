@@ -7,6 +7,8 @@ import { PrismaSubscriptionRepository } from 'src/infrastructure/billing/persist
 import { PrismaSchoolRepository } from 'src/infrastructure/school/persistence/repositories/school.repository.impl';
 import { PrismaCategoryRepository } from 'src/infrastructure/school/persistence/repositories/category.repository.impl';
 import { PrismaSportDisciplineRepository } from 'src/infrastructure/school/persistence/repositories/sport-discipline.repository.impl';
+import { PrismaCoachRepository } from 'src/infrastructure/coach/persistence/repositories/coach.repository.impl';
+import { PrismaAthleteRepository } from 'src/infrastructure/athlete/persistence/repositories/athlete.repository.impl';
 
 @Injectable()
 export class PrismaUnitOfWork implements UnitOfWork {
@@ -20,6 +22,8 @@ export class PrismaUnitOfWork implements UnitOfWork {
       const subscriptionRepository = new PrismaSubscriptionRepository(tx);
       const categoryRepository = new PrismaCategoryRepository(tx);
       const sportDisciplineRepository = new PrismaSportDisciplineRepository(tx);
+      const coachRepository = new PrismaCoachRepository(tx);
+      const athleteRepository = new PrismaAthleteRepository(tx);
       return work({
         userRepository,
         schoolRepository,
@@ -27,6 +31,8 @@ export class PrismaUnitOfWork implements UnitOfWork {
         subscriptionRepository,
         categoryRepository,
         sportDisciplineRepository,
+        coachRepository,
+        athleteRepository,
       });
     });
   }

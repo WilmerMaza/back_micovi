@@ -307,6 +307,10 @@ class InMemoryUnitOfWork implements UnitOfWork {
           countActiveSubscriptionsByPlan: jest.fn(),
           getUsageMetrics: jest.fn(),
         } as any,
+        planRepository: undefined as any,
+        subscriptionRepository: undefined as any,
+        coachRepository: undefined as any,
+        athleteRepository: undefined as any,
       });
     } catch (error) {
       this.userRepository.restore(userSnapshot);
