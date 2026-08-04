@@ -118,10 +118,19 @@ describe('RegisterSchoolHandler', () => {
     const txDisciplineRepo = { addSchoolDiscipline: jest.fn().mockResolvedValue(undefined) };
 
     const unitOfWork = createUnitOfWorkMock(() => ({
+
       userRepository: txUserRepo as any,
       schoolRepository: txSchoolRepo as any,
       categoryRepository: txCategoryRepo as any,
       sportDisciplineRepository: txDisciplineRepo as any,
+
+      userRepository: transactionalUserRepository as any,
+      schoolRepository: schoolRepository as any,
+      planRepository: undefined as any,
+      subscriptionRepository: undefined as any,
+      coachRepository: undefined as any,
+      athleteRepository: undefined as any,
+
     }));
 
     const handler = new RegisterSchoolHandler(
@@ -270,10 +279,19 @@ describe('RegisterSchoolHandler', () => {
     const txDisciplineRepo = { addSchoolDiscipline: jest.fn() };
 
     const unitOfWork = createUnitOfWorkMock(() => ({
+
       userRepository: txUserRepo as any,
       schoolRepository: txSchoolRepo as any,
       categoryRepository: txCategoryRepo as any,
       sportDisciplineRepository: txDisciplineRepo as any,
+
+      userRepository: transactionalUserRepository as any,
+      schoolRepository: schoolRepository as any,
+      planRepository: undefined as any,
+      subscriptionRepository: undefined as any,
+      coachRepository: undefined as any,
+      athleteRepository: undefined as any,
+
     }));
 
     const handler = new RegisterSchoolHandler(
