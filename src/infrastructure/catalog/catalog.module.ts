@@ -7,27 +7,27 @@ import { DisciplineRepository } from 'src/domain/discipline/repositories/discipl
 import { DocumentTypeRepository } from 'src/domain/document-type/repositories/document-type.repository';
 import { EducationLevelRepository } from 'src/domain/education-level/repositories/education-level.repository';
 import { GenderRepository } from 'src/domain/gender/repositories/gender.repository';
-import {
-  StubCategoryRepository,
-  StubCityRepository,
-  StubCountryRepository,
-  StubDepartmentRepository,
-  StubDisciplineRepository,
-  StubDocumentTypeRepository,
-  StubEducationLevelRepository,
-  StubGenderRepository,
-} from './catalog.stubs';
+import { PrismaCategoryRepository } from './persistence/repositories/category.repository.impl';
+import { PrismaCityRepository } from './persistence/repositories/city.repository.impl';
+import { PrismaCountryRepository } from './persistence/repositories/country.repository.impl';
+import { PrismaDepartmentRepository } from './persistence/repositories/department.repository.impl';
+import { PrismaDisciplineRepository } from './persistence/repositories/discipline.repository.impl';
+import { PrismaDocumentTypeRepository } from './persistence/repositories/document-type.repository.impl';
+import { PrismaEducationLevelRepository } from './persistence/repositories/education-level.repository.impl';
+import { PrismaGenderRepository } from './persistence/repositories/gender.repository.impl';
+import { PersistenceModule } from '../persistence/persistence.module';
 
 @Module({
+  imports: [PersistenceModule],
   providers: [
-    { provide: DocumentTypeRepository, useClass: StubDocumentTypeRepository },
-    { provide: CountryRepository, useClass: StubCountryRepository },
-    { provide: DepartmentRepository, useClass: StubDepartmentRepository },
-    { provide: CityRepository, useClass: StubCityRepository },
-    { provide: GenderRepository, useClass: StubGenderRepository },
-    { provide: EducationLevelRepository, useClass: StubEducationLevelRepository },
-    { provide: DisciplineRepository, useClass: StubDisciplineRepository },
-    { provide: CategoryRepository, useClass: StubCategoryRepository },
+    { provide: DocumentTypeRepository, useClass: PrismaDocumentTypeRepository },
+    { provide: CountryRepository, useClass: PrismaCountryRepository },
+    { provide: DepartmentRepository, useClass: PrismaDepartmentRepository },
+    { provide: CityRepository, useClass: PrismaCityRepository },
+    { provide: GenderRepository, useClass: PrismaGenderRepository },
+    { provide: EducationLevelRepository, useClass: PrismaEducationLevelRepository },
+    { provide: DisciplineRepository, useClass: PrismaDisciplineRepository },
+    { provide: CategoryRepository, useClass: PrismaCategoryRepository },
   ],
   exports: [
     DocumentTypeRepository,

@@ -8,21 +8,23 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(uuid())
-  email     String    @unique
-  password  String
-  role      Role
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-  country   String?
-  state     String?
-  city      String?
-  phone     String?
-  address   String?
-  coach     Coach?
-  school    School?
+  id          String        @id @default(uuid())
+  email       String        @unique
+  password    String
+  role        Role
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
+  country     String?
+  state       String?
+  city        String?
+  phone       String?
+  address     String?
+  coach       Coach?
+  school      School?
   authSessions AuthSession[]
+
+  @@index([role])
 }
 
 model AuthSession {
@@ -56,34 +58,85 @@ model School {
   representativename String?
   categories         Category[]
   coaches            Coach[]
+  disciplines        Discipline[]
   user               User         @relation(fields: [userId], references: [id])
   plans              SchoolPlan[]
+  athletes           AthleteInstitution[]
+
+  @@index([deletedAt])
 }
 
 model Coach {
-  id         String          @id @default(uuid())
-  name       String
-  specialty  String
-  userId     String          @unique
-  schoolId   String
-  createdAt  DateTime        @default(now())
-  updatedAt  DateTime        @updatedAt
-  deletedAt  DateTime?
-  athletes   Athlete[]
-  school     School          @relation(fields: [schoolId], references: [id])
-  user       User            @relation(fields: [userId], references: [id])
+  id        String          @id @default(uuid())
+  name      String
+  specialty String
+  userId    String          @unique
+  schoolId  String
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  deletedAt DateTime?
+  athletes  Athlete[]
+  school    School          @relation(fields: [schoolId], references: [id])
+  user      User            @relation(fields: [userId], references: [id])
   categories CoachCategory[]
+
+  @@index([schoolId])
+  @@index([deletedAt])
 }
 
 model Athlete {
-  id        String    @id @default(uuid())
-  name      String
-  age       Int
-  coachId   String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-  coach     Coach     @relation(fields: [coachId], references: [id])
+  id                    String          @id @default(uuid())
+  firstName             String
+  lastName              String
+  birthDate             DateTime
+  documentTypeId        String
+  documentNumber        String
+  genderId              String
+  birthCountryId        String
+  birthDepartmentId     String
+  birthCityId           String
+  residenceCountryId    String
+  residenceDepartmentId String
+  residenceCityId       String
+  educationLevelId      String
+  educationInstitution  String?
+  categoryId            String
+  weight                Float
+  height                Float
+  email                 String          @unique
+  phone                 String?
+  coachId               String?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  deletedAt             DateTime?
+
+  coach             Coach?              @relation(fields: [coachId], references: [id], onDelete: SetNull)
+  documentType      DocumentType        @relation(fields: [documentTypeId], references: [id])
+  gender            Gender              @relation(fields: [genderId], references: [id])
+  birthCountry      Country             @relation("AthleteBirthCountry", fields: [birthCountryId], references: [id])
+  birthDepartment   Department          @relation("AthleteBirthDepartment", fields: [birthDepartmentId], references: [id])
+  birthCity         City                @relation("AthleteBirthCity", fields: [birthCityId], references: [id])
+  residenceCountry  Country             @relation("AthleteResidenceCountry", fields: [residenceCountryId], references: [id])
+  residenceDepartment Department        @relation("AthleteResidenceDepartment", fields: [residenceDepartmentId], references: [id])
+  residenceCity     City                @relation("AthleteResidenceCity", fields: [residenceCityId], references: [id])
+  educationLevel    EducationLevel      @relation(fields: [educationLevelId], references: [id])
+  category          Category            @relation(fields: [categoryId], references: [id])
+  disciplines       AthleteDiscipline[]
+  institutions      AthleteInstitution[]
+
+  @@unique([documentTypeId, documentNumber])
+  @@index([documentTypeId])
+  @@index([genderId])
+  @@index([birthCountryId])
+  @@index([birthDepartmentId])
+  @@index([birthCityId])
+  @@index([residenceCountryId])
+  @@index([residenceDepartmentId])
+  @@index([residenceCityId])
+  @@index([educationLevelId])
+  @@index([categoryId])
+  @@index([coachId])
+  @@index([deletedAt])
 }
 
 model Plan {
@@ -114,6 +167,10 @@ model SchoolPlan {
   canceledAt DateTime?
   plan      Plan                @relation(fields: [planId], references: [id])
   school    School              @relation(fields: [schoolId], references: [id])
+
+  @@index([schoolId])
+  @@index([planId])
+  @@index([deletedAt])
 }
 
 model Category {
@@ -125,6 +182,11 @@ model Category {
   deletedAt DateTime?
   school    School          @relation(fields: [schoolId], references: [id])
   coaches   CoachCategory[]
+  athletes  Athlete[]
+
+  @@unique([name, schoolId])
+  @@index([schoolId])
+  @@index([deletedAt])
 }
 
 model CoachCategory {
@@ -138,6 +200,134 @@ model CoachCategory {
   @@unique([coachId, categoryId])
   @@index([coachId])
   @@index([categoryId])
+}
+
+model DocumentType {
+  id        String     @id @default(uuid())
+  code      String     @unique
+  name      String     @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  deletedAt DateTime?
+  athletes  Athlete[]
+
+  @@index([deletedAt])
+}
+
+model Gender {
+  id        String     @id @default(uuid())
+  code      String     @unique
+  name      String     @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  deletedAt DateTime?
+  athletes  Athlete[]
+
+  @@index([deletedAt])
+}
+
+model Country {
+  id                  String      @id @default(uuid())
+  code                String      @unique
+  name                String      @unique
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  deletedAt           DateTime?
+  departments         Department[]
+  birthAthletes       Athlete[]   @relation("AthleteBirthCountry")
+  residenceAthletes   Athlete[]   @relation("AthleteResidenceCountry")
+
+  @@index([deletedAt])
+}
+
+model Department {
+  id                  String      @id @default(uuid())
+  name                String
+  countryId           String
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  deletedAt           DateTime?
+  country             Country     @relation(fields: [countryId], references: [id])
+  cities              City[]
+  birthAthletes       Athlete[]   @relation("AthleteBirthDepartment")
+  residenceAthletes   Athlete[]   @relation("AthleteResidenceDepartment")
+
+  @@unique([name, countryId])
+  @@index([countryId])
+  @@index([deletedAt])
+}
+
+model City {
+  id                  String      @id @default(uuid())
+  name                String
+  departmentId        String
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  deletedAt           DateTime?
+  department          Department  @relation(fields: [departmentId], references: [id])
+  birthAthletes       Athlete[]   @relation("AthleteBirthCity")
+  residenceAthletes   Athlete[]   @relation("AthleteResidenceCity")
+
+  @@unique([name, departmentId])
+  @@index([departmentId])
+  @@index([deletedAt])
+}
+
+model EducationLevel {
+  id        String     @id @default(uuid())
+  code      String     @unique
+  name      String     @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  deletedAt DateTime?
+  athletes  Athlete[]
+
+  @@index([deletedAt])
+}
+
+model Discipline {
+  id        String              @id @default(uuid())
+  name      String
+  schoolId  String
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  deletedAt DateTime?
+  school    School              @relation(fields: [schoolId], references: [id])
+  athletes  AthleteDiscipline[]
+
+  @@unique([name, schoolId])
+  @@index([schoolId])
+  @@index([deletedAt])
+}
+
+model AthleteDiscipline {
+  id           String     @id @default(uuid())
+  athleteId    String
+  disciplineId String
+  assignedAt   DateTime   @default(now())
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  athlete      Athlete    @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  discipline   Discipline @relation(fields: [disciplineId], references: [id])
+
+  @@unique([athleteId, disciplineId])
+  @@index([athleteId])
+  @@index([disciplineId])
+}
+
+model AthleteInstitution {
+  id         String   @id @default(uuid())
+  athleteId  String
+  schoolId   String
+  assignedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  athlete    Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+  school     School   @relation(fields: [schoolId], references: [id])
+
+  @@unique([athleteId, schoolId])
+  @@index([athleteId])
+  @@index([schoolId])
 }
 
 enum Role {

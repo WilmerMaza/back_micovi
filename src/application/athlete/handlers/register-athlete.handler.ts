@@ -24,6 +24,7 @@ import { GenderRepository } from 'src/domain/gender/repositories/gender.reposito
 import { GenderNotFoundException } from 'src/domain/gender/exceptions/gender-not-found.exception';
 import { SchoolRepository } from 'src/domain/school/repositories/school.repository';
 import { SchoolNotFoundException } from 'src/domain/school/exceptions/school-not-found.exception';
+import { UnitOfWork } from 'src/domain/shared/unit-of-work';
 import { RegisterAthleteCommand } from '../commands/register-athlete.command';
 
 @CommandHandler(RegisterAthleteCommand)
@@ -39,6 +40,7 @@ export class RegisterAthleteHandler implements ICommandHandler<RegisterAthleteCo
     private readonly disciplineRepository: DisciplineRepository,
     private readonly categoryRepository: CategoryRepository,
     private readonly athleteRepository: AthleteRepository,
+    private readonly unitOfWork: UnitOfWork,
   ) {}
 
   async execute(command: RegisterAthleteCommand): Promise<AthleteDto> {
@@ -197,11 +199,15 @@ export class RegisterAthleteHandler implements ICommandHandler<RegisterAthleteCo
       command.phone,
     );
 
-    // 17. Persist
-    const created = await this.athleteRepository.create(athlete);
+    // 17. Persist athlete + relations in a single transaction
+    await this.unitOfWork.execute(async ({ athleteRepository: transactionalAthleteRepository }) => {
+      await transactionalAthleteRepository.create(athlete);
+      await transactionalAthleteRepository.addDiscipline(athlete.id, command.disciplineId);
+      await transactionalAthleteRepository.addInstitution(athlete.id, command.schoolId);
+    });
 
     // 18. Build and return response
-    return mapAthleteToDto(created);
+    return mapAthleteToDto(athlete);
   }
 
   private calculateAge(birthDate: string): number {
