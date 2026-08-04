@@ -57,7 +57,7 @@ export class SchoolController {
           dto.character,
           dto.institutionType ?? null,
           dto.taxId ?? null,
-          dto.headquarters,
+          dto.headquarters ?? null,
           dto.country,
           dto.state ?? null,
           dto.city ?? null,

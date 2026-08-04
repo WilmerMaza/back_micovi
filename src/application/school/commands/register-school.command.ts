@@ -18,7 +18,7 @@ export class RegisterSchoolCommand {
     public readonly character: schoolCharacter,
     public readonly institutionType: InstitutionType | null,
     public readonly taxId: string | null,
-    public readonly headquarters: string,
+    public readonly headquarters: string | null,
     public readonly country: string,
     public readonly state: string | null,
     public readonly city: string | null,

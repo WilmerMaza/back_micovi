@@ -7,7 +7,6 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  IsUrl,
   IsUUID,
   Min,
   MinLength,
@@ -51,7 +50,7 @@ export class RegisterSchoolDto {
     description: 'School physical address',
   })
   @IsString()
-  @MinLength(5)
+  @MinLength(1)
   address: string;
 
   @ApiProperty({
@@ -76,7 +75,7 @@ export class RegisterSchoolDto {
   })
   @IsOptional()
   @IsString()
-  @MinLength(3)
+  @MinLength(1)
   state?: string;
 
   @ApiPropertyOptional({
@@ -85,7 +84,7 @@ export class RegisterSchoolDto {
   })
   @IsOptional()
   @IsString()
-  @MinLength(3)
+  @MinLength(1)
   city?: string;
 
   @ApiProperty({
@@ -114,13 +113,13 @@ export class RegisterSchoolDto {
   @MinLength(5)
   taxId?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 'Sede Principal',
     description: 'Headquarters of the school',
   })
+  @IsOptional()
   @IsString()
-  @MinLength(3)
-  headquarters: string;
+  headquarters?: string;
 
   @ApiProperty({
     example: 'https://www.escueladeportivaaguilas.com',
@@ -128,7 +127,7 @@ export class RegisterSchoolDto {
     required: false,
   })
   @IsOptional()
-  @IsUrl()
+  @IsString()
   website?: string;
 
   @ApiProperty({
