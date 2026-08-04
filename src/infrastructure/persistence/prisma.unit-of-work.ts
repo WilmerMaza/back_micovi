@@ -5,6 +5,8 @@ import { PrismaUserRepository } from 'src/infrastructure/auth/persistence/reposi
 import { PrismaPlanRepository } from 'src/infrastructure/billing/persistence/repositories/plan.repository.impl';
 import { PrismaSubscriptionRepository } from 'src/infrastructure/billing/persistence/repositories/subscription.repository.impl';
 import { PrismaSchoolRepository } from 'src/infrastructure/school/persistence/repositories/school.repository.impl';
+import { PrismaCategoryRepository } from 'src/infrastructure/school/persistence/repositories/category.repository.impl';
+import { PrismaSportDisciplineRepository } from 'src/infrastructure/school/persistence/repositories/sport-discipline.repository.impl';
 import { PrismaCoachRepository } from 'src/infrastructure/coach/persistence/repositories/coach.repository.impl';
 import { PrismaAthleteRepository } from 'src/infrastructure/athlete/persistence/repositories/athlete.repository.impl';
 
@@ -18,6 +20,8 @@ export class PrismaUnitOfWork implements UnitOfWork {
       const schoolRepository = new PrismaSchoolRepository(tx);
       const planRepository = new PrismaPlanRepository(tx);
       const subscriptionRepository = new PrismaSubscriptionRepository(tx);
+      const categoryRepository = new PrismaCategoryRepository(tx);
+      const sportDisciplineRepository = new PrismaSportDisciplineRepository(tx);
       const coachRepository = new PrismaCoachRepository(tx);
       const athleteRepository = new PrismaAthleteRepository(tx);
       return work({
@@ -25,6 +29,8 @@ export class PrismaUnitOfWork implements UnitOfWork {
         schoolRepository,
         planRepository,
         subscriptionRepository,
+        categoryRepository,
+        sportDisciplineRepository,
         coachRepository,
         athleteRepository,
       });

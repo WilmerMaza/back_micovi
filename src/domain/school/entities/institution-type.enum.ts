@@ -1,0 +1,8 @@
+export enum InstitutionType {
+  CLUB = 'CLUB',
+  ACADEMY = 'ACADEMY',
+  FEDERATION = 'FEDERATION',
+  ASSOCIATION = 'ASSOCIATION',
+  SCHOOL = 'SCHOOL',
+  OTHER = 'OTHER',
+}

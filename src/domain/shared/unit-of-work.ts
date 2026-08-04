@@ -3,6 +3,10 @@ import { AthleteRepository } from '../athlete/repositories/athlete.repository';
 import { PlanRepository } from '../billing/repositories/plan.repository';
 import { SubscriptionRepository } from '../billing/repositories/subscription.repository';
 import { SchoolRepository } from '../school/repositories/school.repository';
+
+import { CategoryRepository } from '../school/repositories/category.repository';
+import { SportDisciplineRepository } from '../school/repositories/sport-discipline.repository';
+
 import { CoachRepository } from '../coach/repositories/coach.repository';
 
 export interface UnitOfWorkRepositories {
@@ -10,6 +14,10 @@ export interface UnitOfWorkRepositories {
   schoolRepository: SchoolRepository;
   planRepository: PlanRepository;
   subscriptionRepository: SubscriptionRepository;
+
+  categoryRepository: CategoryRepository;
+  sportDisciplineRepository: SportDisciplineRepository;
+
   coachRepository: CoachRepository;
   athleteRepository: AthleteRepository;
 }

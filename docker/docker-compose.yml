@@ -10,7 +10,7 @@ services:
       - ../.env
     environment:
       # Dentro de Docker la BD se alcanza por nombre de servicio, no localhost
-      DATABASE_URL: postgres://postgres:postgres@db:5432/micovi_db
+      - DATABASE_URL=postgres://postgres:post123@db:5432/micovi_db
     networks:
       - micovi_network
     depends_on:
@@ -22,7 +22,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: post123
       POSTGRES_DB: micovi_db
     ports:
       - "5433:5432"

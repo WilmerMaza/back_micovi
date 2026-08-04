@@ -9,18 +9,24 @@ import {
   CreateAuthSessionInput,
 } from '../src/domain/auth/repositories/auth-session.repository';
 import { UserRepository } from '../src/domain/auth/repositories/user.repository';
-import { SchoolRepository } from '../src/domain/school/repositories/school.repository';
-import { UnitOfWork, UnitOfWorkRepositories } from '../src/domain/shared/unit-of-work';
 import { PasswordHasher } from '../src/domain/auth/services/password-hasher.service';
+import { CategoryRepository } from '../src/domain/school/repositories/category.repository';
+import { SchoolRepository } from '../src/domain/school/repositories/school.repository';
+import { SportDisciplineRepository } from '../src/domain/school/repositories/sport-discipline.repository';
+import { UnitOfWork, UnitOfWorkRepositories } from '../src/domain/shared/unit-of-work';
 import { User } from '../src/domain/auth/entities/user.entity';
 import { UserRole } from '../src/domain/auth/entities/user-role.enum';
 import { School } from '../src/domain/school/entities/school.entity';
+import { schoolCharacter } from '../src/domain/school/entities/school-chacharacter.enum';
+import { InstitutionType } from '../src/domain/school/entities/institution-type.enum';
+import { RepresentativeDocumentType } from '../src/domain/school/entities/representative-document-type.enum';
+import { Category } from '../src/domain/school/entities/category.entity';
+import { SportDiscipline } from '../src/domain/school/entities/sport-discipline.entity';
 import { PrismaService } from '../src/infrastructure/persistence/prisma.service';
 
-class MockPrismaService {
-  async onModuleInit(): Promise<void> {}
-  async onModuleDestroy(): Promise<void> {}
-}
+// ---------------------------------------------------------------------------
+// In-memory implementations
+// ---------------------------------------------------------------------------
 
 class InMemoryUserRepository implements UserRepository {
   private usersByEmail = new Map<string, User>();
@@ -56,9 +62,13 @@ class InMemoryUserRepository implements UserRepository {
 
 class InMemorySchoolRepository implements SchoolRepository {
   private schools = new Map<string, School>();
+  private taxIndex = new Map<string, string>();
 
   async create(school: School): Promise<School> {
     this.schools.set(school.id, school);
+    if (school.taxId) {
+      this.taxIndex.set(school.taxId, school.id);
+    }
     return school;
   }
 
@@ -68,9 +78,19 @@ class InMemorySchoolRepository implements SchoolRepository {
 
   async findByUserId(userId: string): Promise<School | null> {
     for (const school of this.schools.values()) {
-      if (school.userId === userId) {
-        return school;
-      }
+      if (school.userId === userId) return school;
+    }
+    return null;
+  }
+
+  async findByTaxId(taxId: string): Promise<School | null> {
+    const id = this.taxIndex.get(taxId);
+    return id ? (this.schools.get(id) ?? null) : null;
+  }
+
+  async findByName(name: string): Promise<School | null> {
+    for (const school of this.schools.values()) {
+      if (school.name === name) return school;
     }
     return null;
   }
@@ -81,10 +101,81 @@ class InMemorySchoolRepository implements SchoolRepository {
 
   restore(snapshot: Map<string, School>): void {
     this.schools = new Map(snapshot);
+    this.taxIndex.clear();
+    for (const [id, s] of this.schools) {
+      if (s.taxId) {
+        this.taxIndex.set(s.taxId, id);
+      }
+    }
   }
 
   count(): number {
     return this.schools.size;
+  }
+}
+
+class InMemoryCategoryRepository implements CategoryRepository {
+  private categories: Category[] = [];
+
+  async create(category: Category): Promise<Category> {
+    this.categories.push(category);
+    return category;
+  }
+
+  async findBySchoolId(schoolId: string): Promise<Category[]> {
+    return this.categories.filter((c) => c.schoolId === schoolId);
+  }
+
+  snapshot(): Category[] {
+    return [...this.categories];
+  }
+
+  restore(snapshot: Category[]): void {
+    this.categories = [...snapshot];
+  }
+}
+
+class InMemorySportDisciplineRepository implements SportDisciplineRepository {
+  private disciplines = new Map<string, SportDiscipline>();
+  private schoolLinks = new Map<string, Set<string>>();
+
+  async findById(id: string): Promise<SportDiscipline | null> {
+    return this.disciplines.get(id) ?? null;
+  }
+
+  async findByName(name: string): Promise<SportDiscipline | null> {
+    for (const d of this.disciplines.values()) {
+      if (d.name === name) return d;
+    }
+    return null;
+  }
+
+  async findAllByIds(ids: string[]): Promise<SportDiscipline[]> {
+    return ids.map((id) => this.disciplines.get(id)).filter(Boolean) as SportDiscipline[];
+  }
+
+  async create(discipline: SportDiscipline): Promise<SportDiscipline> {
+    this.disciplines.set(discipline.id, discipline);
+    return discipline;
+  }
+
+  async findAll(): Promise<SportDiscipline[]> {
+    return Array.from(this.disciplines.values());
+  }
+
+  async addSchoolDiscipline(schoolId: string, disciplineId: string): Promise<void> {
+    if (!this.schoolLinks.has(schoolId)) {
+      this.schoolLinks.set(schoolId, new Set());
+    }
+    this.schoolLinks.get(schoolId)!.add(disciplineId);
+  }
+
+  seed(discipline: SportDiscipline): void {
+    this.disciplines.set(discipline.id, discipline);
+  }
+
+  getLinkedDisciplineIds(schoolId: string): string[] {
+    return Array.from(this.schoolLinks.get(schoolId) ?? []);
   }
 }
 
@@ -189,23 +280,44 @@ class InMemoryUnitOfWork implements UnitOfWork {
   constructor(
     private readonly userRepository: InMemoryUserRepository,
     private readonly schoolRepository: InMemorySchoolRepository,
+    private readonly categoryRepository: InMemoryCategoryRepository,
+    private readonly sportDisciplineRepository: InMemorySportDisciplineRepository,
   ) {}
 
   async execute<T>(work: (repositories: UnitOfWorkRepositories) => Promise<T>): Promise<T> {
     const userSnapshot = this.userRepository.snapshot();
     const schoolSnapshot = this.schoolRepository.snapshot();
+    const categorySnapshot = this.categoryRepository.snapshot();
     try {
       return await work({
         userRepository: this.userRepository,
         schoolRepository: this.schoolRepository,
-        planRepository: undefined as any,
-        subscriptionRepository: undefined as any,
+        categoryRepository: this.categoryRepository,
+        sportDisciplineRepository: this.sportDisciplineRepository,
+        planRepository: {
+          create: jest.fn(),
+          update: jest.fn(),
+          findById: jest.fn(),
+          findByName: jest.fn(),
+          findAll: jest.fn(),
+          softDelete: jest.fn(),
+        } as any,
+        subscriptionRepository: {
+          create: jest.fn(),
+          update: jest.fn(),
+          findById: jest.fn(),
+          findCurrentBySchoolId: jest.fn(),
+          findHistoryBySchoolId: jest.fn(),
+          countActiveSubscriptionsByPlan: jest.fn(),
+          getUsageMetrics: jest.fn(),
+        } as any,
         coachRepository: undefined as any,
         athleteRepository: undefined as any,
       });
     } catch (error) {
       this.userRepository.restore(userSnapshot);
       this.schoolRepository.restore(schoolSnapshot);
+      this.categoryRepository.restore(categorySnapshot);
       throw error;
     }
   }
@@ -221,29 +333,60 @@ class InMemoryPasswordHasher implements PasswordHasher {
   }
 }
 
-function configureApp(app: INestApplication): void {
-  app.setGlobalPrefix('api', { exclude: ['document', 'document-json'] });
-  app.use(cookieParser());
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    }),
-  );
-}
+// ---------------------------------------------------------------------------
+// Shared helpers
+// ---------------------------------------------------------------------------
+
+const disciplineId = '11111111-1111-4111-8111-111111111111';
+
+const validPayload = {
+  name: 'Mi Academia Deportiva',
+  country: 'Colombia',
+  state: 'Bolívar',
+  city: 'Cartagena',
+  character: schoolCharacter.PRIVATE,
+  institutionType: InstitutionType.ACADEMY,
+  taxId: '901123456-7',
+  headquarters: 'Sede Principal',
+  website: 'https://academia.example.com',
+  representativename: 'Juan Pérez',
+  representativeDocumentType: RepresentativeDocumentType.CC,
+  email: 'admin@academia.com',
+  password: 'SuperSecret123',
+  disciplineIds: [disciplineId],
+  categories: [{ name: 'Infantil', minAge: 6, maxAge: 12 }],
+};
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
 
 describe('Auth & School flows (e2e)', () => {
   let app: INestApplication;
   let userRepository: InMemoryUserRepository;
   let schoolRepository: InMemorySchoolRepository;
+  let categoryRepository: InMemoryCategoryRepository;
+  let sportDisciplineRepository: InMemorySportDisciplineRepository;
 
   beforeEach(async () => {
     userRepository = new InMemoryUserRepository();
     schoolRepository = new InMemorySchoolRepository();
-    const unitOfWork = new InMemoryUnitOfWork(userRepository, schoolRepository);
+    categoryRepository = new InMemoryCategoryRepository();
+    sportDisciplineRepository = new InMemorySportDisciplineRepository();
+    const unitOfWork = new InMemoryUnitOfWork(
+      userRepository,
+      schoolRepository,
+      categoryRepository,
+      sportDisciplineRepository,
+    );
     const passwordHasher = new InMemoryPasswordHasher();
     const authSessionRepository = new InMemoryAuthSessionRepository();
+
+    const mockPrismaService = {
+      $connect: jest.fn(),
+      $disconnect: jest.fn(),
+      $transaction: jest.fn((cb: any) => cb({})),
+    };
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -252,6 +395,10 @@ describe('Auth & School flows (e2e)', () => {
       .useValue(userRepository)
       .overrideProvider(SchoolRepository)
       .useValue(schoolRepository)
+      .overrideProvider(CategoryRepository)
+      .useValue(categoryRepository)
+      .overrideProvider(SportDisciplineRepository)
+      .useValue(sportDisciplineRepository)
       .overrideProvider(AuthSessionRepository)
       .useValue(authSessionRepository)
       .overrideProvider(UnitOfWork)
@@ -259,92 +406,259 @@ describe('Auth & School flows (e2e)', () => {
       .overrideProvider(PasswordHasher)
       .useValue(passwordHasher)
       .overrideProvider(PrismaService)
-      .useValue(new MockPrismaService())
+      .useValue(mockPrismaService)
       .compile();
 
     app = moduleFixture.createNestApplication();
-    configureApp(app);
+    app.setGlobalPrefix('api');
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
+    );
     await app.init();
+  });
+
+  beforeEach(() => {
+    const football = new SportDiscipline(disciplineId, 'Fútbol', null);
+    sportDisciplineRepository.seed(football);
   });
 
   afterEach(async () => {
     await app.close();
   });
 
-  const registerPayload = {
-    name: 'My Academy',
-    address: 'Main St 123',
-    phone: '5554444',
-    country: 'Colombia',
-    state: 'Bolivar',
-    city: 'Cartagena',
-    character: 'PUBLIC',
-    headquarters: 'Sede Principal',
-    website: 'https://academy.example.com',
-    representativename: 'Juan Perez',
-    email: 'academy@example.com',
-    password: 'Secret123',
-  };
+  describe('POST /api/instituciones', () => {
+    it('registers an institution with required fields only', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/instituciones')
+        .send(validPayload)
+        .expect(201);
 
-  it('registers a school and persists both user and school', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/api/schools/register')
-      .send(registerPayload)
-      .expect(201);
+      expect(response.body).toMatchObject({
+        name: validPayload.name,
+        taxId: validPayload.taxId,
+        character: validPayload.character,
+        institutionType: validPayload.institutionType,
+        country: validPayload.country,
+        state: validPayload.state,
+        city: validPayload.city,
+        headquarters: validPayload.headquarters,
+        website: validPayload.website,
+        representativename: validPayload.representativename,
+        representativeDocumentType: validPayload.representativeDocumentType,
+        categories: [{ name: 'Infantil', minAge: 6, maxAge: 12 }],
+        disciplines: [{ id: disciplineId, name: 'Fútbol' }],
+      });
+      expect(response.body.id).toBeDefined();
+      expect(response.body.userId).toBeDefined();
+      expect(userRepository.count()).toBe(1);
+      expect(schoolRepository.count()).toBe(1);
+    });
 
-    expect(response.body).toEqual(
-      expect.objectContaining({
-        name: 'My Academy',
-      }),
-    );
-    expect(userRepository.count()).toBe(1);
-    expect(schoolRepository.count()).toBe(1);
+    it('registers an institution with multiple disciplines and categories', async () => {
+      const discId2 = '22222222-2222-4222-8222-222222222222';
+      const basketball = new SportDiscipline(discId2, 'Baloncesto', null);
+      sportDisciplineRepository.seed(basketball);
+
+      const response = await request(app.getHttpServer())
+        .post('/api/instituciones')
+        .send({
+          ...validPayload,
+          disciplineIds: [disciplineId, discId2],
+          categories: [
+            { name: 'Infantil A', minAge: 6, maxAge: 8 },
+            { name: 'Infantil B', minAge: 9, maxAge: 12 },
+          ],
+        })
+        .expect(201);
+
+      expect(response.body.disciplines).toHaveLength(2);
+      expect(response.body.categories).toHaveLength(2);
+    });
+
+    it('registers an institution with all optional fields', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/instituciones')
+        .send({
+          ...validPayload,
+          logo: 'https://example.com/logo.png',
+          foundationDate: '2024-01-15',
+          latitude: 10.4806,
+          longitude: -66.9036,
+        })
+        .expect(201);
+
+      expect(response.body.logo).toBe('https://example.com/logo.png');
+      expect(response.body.foundationDate).toBe('2024-01-15T00:00:00.000Z');
+      expect(response.body.latitude).toBe(10.4806);
+      expect(response.body.longitude).toBe(-66.9036);
+    });
+
+    it('registers without taxId when other fields are present', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/instituciones')
+        .send({
+          name: 'Sin TaxId',
+          country: 'Perú',
+          character: schoolCharacter.PRIVATE,
+          headquarters: 'Sede Central',
+          representativename: 'Ana Torres',
+          email: 'no-taxid@ejemplo.com',
+          password: 'SecurePass1',
+          disciplineIds: [disciplineId],
+          categories: [{ name: 'Juvenil', minAge: 13, maxAge: 17 }],
+        })
+        .expect(201);
+
+      expect(response.body.taxId).toBeNull();
+      expect(response.body.disciplines).toHaveLength(1);
+      expect(response.body.categories).toHaveLength(1);
+    });
+
+    it('registers without disciplineIds when other fields are present', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/instituciones')
+        .send({
+          name: 'Sin Disciplinas',
+          country: 'Colombia',
+          character: schoolCharacter.PRIVATE,
+          institutionType: InstitutionType.CLUB,
+          taxId: '777777777-7',
+          headquarters: 'Sede Club',
+          representativename: 'Pedro López',
+          email: 'sin-disciplinas@ejemplo.com',
+          password: 'SecurePass2',
+          categories: [{ name: 'Infantil', minAge: 6, maxAge: 12 }],
+        })
+        .expect(201);
+
+      expect(response.body.taxId).toBe('777777777-7');
+      expect(response.body.disciplines).toHaveLength(0);
+      expect(response.body.categories).toHaveLength(1);
+    });
+
+    it('registers without categories when other fields are present', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/instituciones')
+        .send({
+          name: 'Sin Categorías',
+          country: 'México',
+          character: schoolCharacter.PUBLIC,
+          institutionType: InstitutionType.ACADEMY,
+          taxId: '666666666-6',
+          headquarters: 'Sede Principal',
+          representativename: 'María García',
+          email: 'sin-categorias@ejemplo.com',
+          password: 'SecurePass3',
+          disciplineIds: [disciplineId],
+        })
+        .expect(201);
+
+      expect(response.body.taxId).toBe('666666666-6');
+      expect(response.body.disciplines).toHaveLength(1);
+      expect(response.body.categories).toHaveLength(0);
+    });
+
+    it('registers with only core fields (no taxId, no disciplineIds, no categories)', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/instituciones')
+        .send({
+          name: 'Institución Básica',
+          country: 'Colombia',
+          character: schoolCharacter.PUBLIC,
+          headquarters: 'Sede Única',
+          representativename: 'Carlos Ruiz',
+          email: 'basica@institucion.com',
+          password: 'Password123',
+        })
+        .expect(201);
+
+      expect(response.body.taxId).toBeNull();
+      expect(response.body.institutionType).toBeNull();
+      expect(response.body.state).toBeNull();
+      expect(response.body.city).toBeNull();
+      expect(response.body.categories).toHaveLength(0);
+      expect(response.body.disciplines).toHaveLength(0);
+      expect(response.body.name).toBe('Institución Básica');
+    });
+
+    it('registers an institution without optional institutionType, state, city, and representativeDocumentType', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/instituciones')
+        .send({
+          name: 'Academia Sin Opcionales',
+          country: 'Colombia',
+          character: schoolCharacter.PUBLIC,
+          taxId: '801987654-3',
+          headquarters: 'Sede Norte',
+          representativename: 'María López',
+          email: 'admin@academia2.com',
+          password: 'SuperSecret456',
+          disciplineIds: [disciplineId],
+          categories: [{ name: 'Adultos', minAge: 18, maxAge: 40 }],
+        })
+        .expect(201);
+
+      expect(response.body.institutionType).toBeNull();
+      expect(response.body.state).toBeNull();
+      expect(response.body.city).toBeNull();
+      expect(response.body.representativeDocumentType).toBeNull();
+      expect(response.body.name).toBe('Academia Sin Opcionales');
+    });
+
+    it('returns 409 when email is already in use', async () => {
+      await request(app.getHttpServer()).post('/api/instituciones').send(validPayload).expect(201);
+
+      await request(app.getHttpServer()).post('/api/instituciones').send(validPayload).expect(409);
+
+      expect(userRepository.count()).toBe(1);
+      expect(schoolRepository.count()).toBe(1);
+    });
+
+    it('returns 409 when taxId is already in use', async () => {
+      await request(app.getHttpServer()).post('/api/instituciones').send(validPayload).expect(201);
+
+      await request(app.getHttpServer())
+        .post('/api/instituciones')
+        .send({ ...validPayload, email: 'other@academia.com' })
+        .expect(409);
+
+      expect(userRepository.count()).toBe(1);
+      expect(schoolRepository.count()).toBe(1);
+    });
+
+    it('returns 404 when a discipline does not exist', async () => {
+      sportDisciplineRepository = new InMemorySportDisciplineRepository();
+      await request(app.getHttpServer())
+        .post('/api/instituciones')
+        .send({ ...validPayload, disciplineIds: ['99999999-9999-4999-8999-999999999999'] })
+        .expect(404);
+    });
+
+    it('returns 400 when required fields are missing', async () => {
+      await request(app.getHttpServer()).post('/api/instituciones').send({}).expect(400);
+    });
   });
 
-  it('prevents duplicate registrations and leaves state untouched', async () => {
-    await request(app.getHttpServer())
-      .post('/api/schools/register')
-      .send(registerPayload)
-      .expect(201);
-    await request(app.getHttpServer())
-      .post('/api/schools/register')
-      .send(registerPayload)
-      .expect(409);
+  describe('POST /auth/login after registration', () => {
+    it('allows login after a full registration and rejects wrong passwords', async () => {
+      await request(app.getHttpServer()).post('/api/instituciones').send(validPayload).expect(201);
 
-    expect(userRepository.count()).toBe(1);
-    expect(schoolRepository.count()).toBe(1);
-  });
+      const loginResponse = await request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({ email: validPayload.email, password: validPayload.password })
+        .expect(201);
 
-  it('allows login after registration, sets cookies and rejects invalid credentials', async () => {
-    await request(app.getHttpServer())
-      .post('/api/schools/register')
-      .send(registerPayload)
-      .expect(201);
-
-    const agent = request.agent(app.getHttpServer());
-    const loginResponse = await agent
-      .post('/api/auth/login')
-      .send({ email: 'academy@example.com', password: 'Secret123' })
-      .expect(201);
-
-    expect(loginResponse.body).toEqual(
-      expect.objectContaining({
-        email: 'academy@example.com',
+      expect(loginResponse.body).toMatchObject({
+        email: validPayload.email,
         role: UserRole.SCHOOL,
-      }),
-    );
-    expect(loginResponse.body).not.toHaveProperty('accessToken');
+      });
+      expect(loginResponse.body.id).toBeDefined();
+      expect(loginResponse.body.schoolId).toBeDefined();
 
-    const cookies = loginResponse.headers['set-cookie'];
-    expect(cookies).toBeDefined();
-    expect(cookies?.some((c: string) => c.startsWith('micovi_access='))).toBe(true);
-    expect(cookies?.some((c: string) => c.startsWith('micovi_refresh='))).toBe(true);
-
-    await agent.get('/api/auth/me').expect(200);
-
-    await request(app.getHttpServer())
-      .post('/api/auth/login')
-      .send({ email: 'academy@example.com', password: 'WrongPass' })
-      .expect(401);
+      await request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({ email: validPayload.email, password: 'WrongPassword' })
+        .expect(401);
+    });
   });
 });
