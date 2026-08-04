@@ -18,7 +18,8 @@ async function bootstrap() {
   });
 
   const configService = app.get(ConfigService);
-  const corsOrigins = configService.get<string[]>('CORS_ORIGINS', ['http://localhost:4200']);
+  const corsOrigins = configService.get<string[]>('CORS_ORIGINS', []);
+  const isProduction = configService.get<string>('NODE_ENV') === 'production';
 
   app.use(helmet());
   app.use(cookieParser());
@@ -31,7 +32,9 @@ async function bootstrap() {
       origin: string | undefined,
       callback: (err: Error | null, allow?: boolean) => void,
     ) => {
-      if (!origin || corsOrigins.includes(origin)) {
+      // Permite clientes sin navegador (Postman, curl, server-to-server) y,
+      // en desarrollo, cualquier origen local (Swagger, Angular, Vite, etc.).
+      if (!origin || !isProduction || corsOrigins.includes(origin)) {
         callback(null, true);
         return;
       }
