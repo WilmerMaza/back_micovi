@@ -70,13 +70,9 @@ model School {
   longitude          Float?
   categories         Category[]
   coaches            Coach[]
-
   disciplines        SchoolDiscipline[]
+  athleteDisciplines Discipline[]
   user               User               @relation(fields: [userId], references: [id])
-
-  disciplines        Discipline[]
-  user               User         @relation(fields: [userId], references: [id])
-
   plans              SchoolPlan[]
   athletes           AthleteInstitution[]
 
@@ -208,14 +204,6 @@ model SchoolDiscipline {
   @@unique([schoolId, disciplineId])
   @@index([schoolId])
   @@index([disciplineId])
-
-  plan      Plan                @relation(fields: [planId], references: [id])
-  school    School              @relation(fields: [schoolId], references: [id])
-
-  @@index([schoolId])
-  @@index([planId])
-  @@index([deletedAt])
-
 }
 
 model Category {

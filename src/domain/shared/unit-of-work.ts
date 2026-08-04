@@ -9,7 +9,6 @@ import { SportDisciplineRepository } from '../school/repositories/sport-discipli
 
 import { CoachRepository } from '../coach/repositories/coach.repository';
 
-
 export interface UnitOfWorkRepositories {
   userRepository: UserRepository;
   schoolRepository: SchoolRepository;
@@ -21,7 +20,6 @@ export interface UnitOfWorkRepositories {
 
   coachRepository: CoachRepository;
   athleteRepository: AthleteRepository;
-
 }
 
 export abstract class UnitOfWork {

@@ -51,6 +51,8 @@ import { UnitOfWork } from 'src/domain/shared/unit-of-work';
     {
       provide: SportDisciplineRepository,
       useClass: PrismaSportDisciplineRepository,
+    },
+    {
       provide: CoachRepository,
       useClass: PrismaCoachRepository,
     },
