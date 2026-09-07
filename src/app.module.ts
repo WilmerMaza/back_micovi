@@ -5,6 +5,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AthleteModule } from './infrastructure/athlete/athlete.module';
 import { AuthModule } from './infrastructure/auth/auth.module';
 import { BillingModule } from './infrastructure/billing/billing.module';
+import { CatalogQueryModule } from './infrastructure/catalog/catalog-query.module';
 import { validate } from './infrastructure/config/env.validation';
 import { SchoolModule } from './infrastructure/school/school.module';
 
@@ -25,6 +26,7 @@ import { SchoolModule } from './infrastructure/school/school.module';
     AuthModule,
     SchoolModule,
     BillingModule,
+    CatalogQueryModule,
   ],
   controllers: [],
   providers: [

@@ -1,3 +1,6 @@
+/**
+ * Mapper para convertir la entidad Athlete del dominio a AthleteDto.
+ */
 import { AthleteDto } from '../dto/athlete.dto';
 import { Athlete } from 'src/domain/athlete/entities/athlete.entity';
 
@@ -25,6 +28,7 @@ export const mapAthleteToDto = (athlete: Athlete): AthleteDto => ({
   disciplineId: athlete.disciplineId ?? '',
   email: athlete.email ?? '',
   phone: athlete.phone ?? '',
+  photoUrl: athlete.photoUrl ?? null,
   createdAt: athlete.createdAt,
   updatedAt: athlete.updatedAt,
 });

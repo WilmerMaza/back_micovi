@@ -105,6 +105,7 @@ model Athlete {
   height                Float
   email                 String          @unique
   phone                 String?
+  photoUrl              String?
   coachId               String?
   createdAt             DateTime        @default(now())
   updatedAt             DateTime        @updatedAt

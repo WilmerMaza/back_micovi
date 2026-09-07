@@ -16,4 +16,12 @@ export class PrismaCountryRepository implements CountryRepository {
     });
     return record ? new Country(record.id, record.name) : null;
   }
+
+  async findAll(): Promise<Country[]> {
+    const records = await this.prisma.country.findMany({
+      where: { deletedAt: null },
+      orderBy: { name: 'asc' },
+    });
+    return records.map((r) => new Country(r.id, r.name));
+  }
 }

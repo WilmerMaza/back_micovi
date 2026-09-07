@@ -16,4 +16,12 @@ export class PrismaEducationLevelRepository implements EducationLevelRepository 
     });
     return record ? new EducationLevel(record.id, record.name) : null;
   }
+
+  async findAll(): Promise<EducationLevel[]> {
+    const records = await this.prisma.educationLevel.findMany({
+      where: { deletedAt: null },
+      orderBy: { name: 'asc' },
+    });
+    return records.map((r) => new EducationLevel(r.id, r.name));
+  }
 }

@@ -6,11 +6,13 @@ import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { WinstonModule } from 'nest-winston';
 import { format, transports } from 'winston';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 import { AppModule } from './app.module';
 import { COOKIE_NAMES } from './infrastructure/config/cookie.config';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: WinstonModule.createLogger({
       transports: [new transports.Console()],
       format: format.combine(format.timestamp(), format.json()),
@@ -25,6 +27,10 @@ async function bootstrap() {
   app.use(cookieParser());
   app.setGlobalPrefix('api', {
     exclude: ['document', 'document-json'],
+  });
+
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/uploads/',
   });
 
   app.enableCors({

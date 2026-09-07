@@ -130,14 +130,6 @@ export class RegisterAthleteDto {
   height: number;
 
   @ApiProperty({
-    example: '550e8400-e29b-41d4-a716-446655440011',
-    description: 'ID de la institución deportiva',
-  })
-  @IsUUID()
-  @IsNotEmpty()
-  schoolId: string;
-
-  @ApiProperty({
     example: '550e8400-e29b-41d4-a716-446655440012',
     description: 'ID de la disciplina deportiva',
   })

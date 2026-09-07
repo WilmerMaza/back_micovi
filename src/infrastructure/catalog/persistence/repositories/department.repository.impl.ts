@@ -16,4 +16,12 @@ export class PrismaDepartmentRepository implements DepartmentRepository {
     });
     return record ? new Department(record.id, record.name, record.countryId) : null;
   }
+
+  async findByCountryId(countryId: string): Promise<Department[]> {
+    const records = await this.prisma.department.findMany({
+      where: { countryId, deletedAt: null },
+      orderBy: { name: 'asc' },
+    });
+    return records.map((r) => new Department(r.id, r.name, r.countryId));
+  }
 }
