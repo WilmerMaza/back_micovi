@@ -16,4 +16,12 @@ export class PrismaDocumentTypeRepository implements DocumentTypeRepository {
     });
     return record ? new DocumentType(record.id, record.name) : null;
   }
+
+  async findAll(): Promise<DocumentType[]> {
+    const records = await this.prisma.documentType.findMany({
+      where: { deletedAt: null },
+      orderBy: { name: 'asc' },
+    });
+    return records.map((r) => new DocumentType(r.id, r.name));
+  }
 }
