@@ -18,6 +18,7 @@ export class PrismaSchoolRepository implements SchoolRepository {
         name: school.name,
         userId: school.userId,
         character: school.character,
+        country: school.country ?? '',
         headquarters: school.headquarters,
         website: school.website,
         representativename: school.representativename,
@@ -49,6 +50,7 @@ export class PrismaSchoolRepository implements SchoolRepository {
       record.headquarters,
       record.website,
       record.representativename,
+      record.country,
     );
   }
 }
