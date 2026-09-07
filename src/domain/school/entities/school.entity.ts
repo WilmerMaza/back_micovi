@@ -9,5 +9,6 @@ export class School {
     public readonly headquarters: string | null,
     public readonly website: string | null,
     public readonly representativename: string | null,
+    public readonly country: string | null = null,
   ) {}
 }

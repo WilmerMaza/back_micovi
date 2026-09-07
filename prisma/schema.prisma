@@ -53,6 +53,7 @@ model School {
   updatedAt          DateTime     @updatedAt
   deletedAt          DateTime?
   character          Character
+  country            String
   headquarters       String?
   website            String?
   representativename String?
