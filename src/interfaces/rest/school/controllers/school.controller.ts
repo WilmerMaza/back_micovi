@@ -48,11 +48,11 @@ export class SchoolController {
           dto.email,
           dto.password,
           dto.character,
+          dto.headquarters,
           dto.country,
           dto.state,
           dto.city,
-          dto.headquarters,
-          dto.website,
+          dto.website ?? null,
           dto.representativename,
         ),
       );
