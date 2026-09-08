@@ -1,0 +1,1 @@
+SELECT id, email, role, country, state, city, phone, address, "createdAt" FROM "User" WHERE email LIKE '%institution.com';

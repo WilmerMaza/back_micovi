@@ -12,7 +12,7 @@ export class RegisterSchoolCommand {
     public readonly country: string,
     public readonly state: string,
     public readonly city: string,
-    public readonly website: string,
+    public readonly website: string | null,
     public readonly representativename: string,
   ) {}
 }
