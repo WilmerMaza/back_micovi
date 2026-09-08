@@ -29,7 +29,7 @@ async function bootstrap() {
     exclude: ['document', 'document-json'],
   });
 
-  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+  app.useStaticAssets(join(__dirname, '..', '..', 'uploads'), {
     prefix: '/uploads/',
   });
 
