@@ -1,5 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+/**
+ * DTO de respuesta para la entidad Athlete.
+ * Se usa en las respuestas de los endpoints de consulta y registro.
+ */
 export class AthleteDto {
   @ApiProperty()
   id: string;
@@ -69,6 +73,9 @@ export class AthleteDto {
 
   @ApiProperty({ example: '3001234567' })
   phone: string;
+
+  @ApiProperty({ required: false, nullable: true })
+  photoUrl: string | null;
 
   @ApiProperty()
   createdAt: Date;

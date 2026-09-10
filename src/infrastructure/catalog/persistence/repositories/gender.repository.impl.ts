@@ -16,4 +16,12 @@ export class PrismaGenderRepository implements GenderRepository {
     });
     return record ? new Gender(record.id, record.name) : null;
   }
+
+  async findAll(): Promise<Gender[]> {
+    const records = await this.prisma.gender.findMany({
+      where: { deletedAt: null },
+      orderBy: { name: 'asc' },
+    });
+    return records.map((r) => new Gender(r.id, r.name));
+  }
 }

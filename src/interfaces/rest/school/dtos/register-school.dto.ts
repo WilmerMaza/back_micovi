@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsEnum, IsString, MinLength } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsEmail, IsEnum, IsOptional, IsString, MinLength } from 'class-validator';
 import { schoolCharacter } from 'src/domain/school/entities/school-chacharacter.enum';
 
 export class RegisterSchoolDto {
@@ -69,11 +70,14 @@ export class RegisterSchoolDto {
 
   @ApiProperty({
     example: 'https://www.escueladeportivaaguilas.com',
-    description: 'Official website of the school',
+    description: 'Official website of the school (optional)',
+    required: false,
   })
+  @IsOptional()
+  @Transform(({ value }) => (value === '' ? undefined : value))
   @IsString()
   @MinLength(5)
-  website: string;
+  website?: string;
 
   @ApiProperty({
     example: 'Juan Pérez',

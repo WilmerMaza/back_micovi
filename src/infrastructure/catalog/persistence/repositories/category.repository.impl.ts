@@ -16,4 +16,12 @@ export class PrismaCategoryRepository implements CategoryRepository {
     });
     return record ? new Category(record.id, record.name, record.schoolId) : null;
   }
+
+  async findBySchoolId(schoolId: string): Promise<Category[]> {
+    const records = await this.prisma.category.findMany({
+      where: { schoolId, deletedAt: null },
+      orderBy: { name: 'asc' },
+    });
+    return records.map((r) => new Category(r.id, r.name, r.schoolId));
+  }
 }

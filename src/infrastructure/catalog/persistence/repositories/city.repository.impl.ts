@@ -16,4 +16,12 @@ export class PrismaCityRepository implements CityRepository {
     });
     return record ? new City(record.id, record.name, record.departmentId) : null;
   }
+
+  async findByDepartmentId(departmentId: string): Promise<City[]> {
+    const records = await this.prisma.city.findMany({
+      where: { departmentId, deletedAt: null },
+      orderBy: { name: 'asc' },
+    });
+    return records.map((r) => new City(r.id, r.name, r.departmentId));
+  }
 }

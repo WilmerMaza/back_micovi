@@ -16,4 +16,12 @@ export class PrismaDisciplineRepository implements DisciplineRepository {
     });
     return record ? new Discipline(record.id, record.name, record.schoolId) : null;
   }
+
+  async findBySchoolId(schoolId: string): Promise<Discipline[]> {
+    const records = await this.prisma.discipline.findMany({
+      where: { schoolId, deletedAt: null },
+      orderBy: { name: 'asc' },
+    });
+    return records.map((r) => new Discipline(r.id, r.name, r.schoolId));
+  }
 }

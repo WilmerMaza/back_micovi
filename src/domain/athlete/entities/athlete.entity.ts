@@ -1,3 +1,9 @@
+/**
+ * Entidad que representa un deportista en el dominio del sistema.
+ *
+ * Contiene los datos personales, físicos, educativos y deportivos del atleta.
+ * El campo age se calcula desde birthDate y no se persiste directamente.
+ */
 export class Athlete {
   constructor(
     public readonly id: string,
@@ -27,5 +33,6 @@ export class Athlete {
     public readonly disciplineId?: string,
     public readonly email?: string,
     public readonly phone?: string,
+    public readonly photoUrl?: string | null,
   ) {}
 }
