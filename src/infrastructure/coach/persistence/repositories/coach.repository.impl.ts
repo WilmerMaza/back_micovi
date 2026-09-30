@@ -17,6 +17,19 @@ export class PrismaCoachRepository implements CoachRepository {
     return record ? this.toDomain(record) : null;
   }
 
+  async create(coach: Coach): Promise<Coach> {
+    const record = await this.prisma.coach.create({
+      data: {
+        id: coach.id,
+        name: coach.name,
+        specialty: coach.specialty,
+        userId: coach.userId,
+        schoolId: coach.schoolId,
+      },
+    });
+    return this.toDomain(record);
+  }
+
   private toDomain(record: PrismaCoach): Coach {
     return new Coach(record.id, record.name, record.specialty, record.userId, record.schoolId);
   }
